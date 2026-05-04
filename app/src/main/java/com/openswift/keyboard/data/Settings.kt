@@ -41,4 +41,20 @@ class Settings(ctx: Context) {
     var keyHeightDp: Int
         get() = prefs.getInt("keyHeight", 56)
         set(v) { prefs.edit().putInt("keyHeight", v).apply() }
+
+    var powerSaveMode: Boolean
+        get() = prefs.getBoolean("powersave", false)
+        set(v) { prefs.edit().putBoolean("powersave", v).apply() }
+
+    var clipboardEnabled: Boolean
+        get() = prefs.getBoolean("clipboard", false)
+        set(v) { prefs.edit().putBoolean("clipboard", v).apply() }
+
+    var perAppTint: Boolean
+        get() = prefs.getBoolean("perapp_tint", false)
+        set(v) { prefs.edit().putBoolean("perapp_tint", v).apply() }
+
+    var incognitoMode: Boolean
+        get() = prefs.getBoolean("incognito", false)
+        set(v) { prefs.edit().putBoolean("incognito", v).apply() }
 }

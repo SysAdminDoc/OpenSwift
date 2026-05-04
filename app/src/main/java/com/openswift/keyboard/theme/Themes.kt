@@ -100,7 +100,46 @@ object Themes {
         gestureTrail = KbTheme.rgb(138, 180, 248)
     )
 
-    val all: List<KbTheme> = listOf(Amoled, Mocha, GithubDark, SwiftDark, MaterialLight, Pixel)
+    val Nord = KbTheme(
+        id = "nord",
+        name = "Nord",
+        background = KbTheme.rgb(46, 52, 64),
+        keyBackground = KbTheme.rgb(59, 66, 82),
+        keyModifierBackground = KbTheme.rgb(36, 41, 51),
+        keyText = KbTheme.rgb(236, 239, 244),
+        keyAccent = KbTheme.rgb(136, 192, 208),
+        suggestionBg = KbTheme.rgb(36, 41, 51),
+        suggestionText = KbTheme.rgb(216, 222, 233),
+        gestureTrail = KbTheme.rgb(143, 188, 187)
+    )
+
+    val Dracula = KbTheme(
+        id = "dracula",
+        name = "Dracula",
+        background = KbTheme.rgb(40, 42, 54),
+        keyBackground = KbTheme.rgb(68, 71, 90),
+        keyModifierBackground = KbTheme.rgb(40, 42, 54),
+        keyText = KbTheme.rgb(248, 248, 242),
+        keyAccent = KbTheme.rgb(189, 147, 249),
+        suggestionBg = KbTheme.rgb(40, 42, 54),
+        suggestionText = KbTheme.rgb(248, 248, 242),
+        gestureTrail = KbTheme.rgb(139, 233, 253)
+    )
+
+    val Tokyonight = KbTheme(
+        id = "tokyonight",
+        name = "Tokyo Night",
+        background = KbTheme.rgb(26, 27, 38),
+        keyBackground = KbTheme.rgb(41, 44, 60),
+        keyModifierBackground = KbTheme.rgb(26, 27, 38),
+        keyText = KbTheme.rgb(192, 202, 245),
+        keyAccent = KbTheme.rgb(122, 162, 247),
+        suggestionBg = KbTheme.rgb(26, 27, 38),
+        suggestionText = KbTheme.rgb(173, 187, 230),
+        gestureTrail = KbTheme.rgb(158, 206, 106)
+    )
+
+    val all: List<KbTheme> = listOf(Amoled, Mocha, GithubDark, SwiftDark, MaterialLight, Pixel, Nord, Dracula, Tokyonight)
 
     fun byId(id: String): KbTheme = all.firstOrNull { it.id == id } ?: Amoled
 }
