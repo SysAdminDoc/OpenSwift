@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.unit.dp
 import com.openswift.keyboard.data.Settings
@@ -57,14 +58,22 @@ fun SettingsUI(
     ) {
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = keyBgColor,
-            contentColor = accentColor
+            containerColor = SemanticColors.getSubtleAccent(accentColor, true),
+            contentColor = accentColor,
+            divider = { Divider(color = accentColor.copy(alpha = Alphas.divider)) }
         ) {
             tabs.forEachIndexed { idx, label ->
                 Tab(
                     selected = selectedTab == idx,
                     onClick = { selectedTab = idx },
-                    text = { Text(label, color = textColor) }
+                    text = {
+                        Text(
+                            label,
+                            color = textColor,
+                            style = if (selectedTab == idx) AppTypography.labelLarge else AppTypography.labelMedium
+                        )
+                    },
+                    modifier = Modifier.padding(vertical = Spacing.md)
                 )
             }
         }
@@ -73,7 +82,7 @@ fun SettingsUI(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(Spacing.lg)
         ) {
             when (selectedTab) {
                 0 -> KeyboardSettingsTab(settings, textColor, accentColor)
@@ -86,67 +95,102 @@ fun SettingsUI(
 
 @Composable
 fun KeyboardSettingsTab(settings: Settings, textColor: ComposeColor, accentColor: ComposeColor) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+    ) {
         Text(
             "Keyboard Settings",
-            style = MaterialTheme.typography.headlineSmall,
-            color = textColor,
-            modifier = Modifier.padding(bottom = 16.dp)
+            style = AppTypography.headlineSmall,
+            color = textColor
         )
 
-        Text("Layout", style = MaterialTheme.typography.titleMedium, color = textColor)
-        listOf("qwerty" to "QWERTY", "qwertz" to "QWERTZ", "azerty" to "AZERTY").forEach { (id, label) ->
-            ToggleOption(label, settings.layout == id, textColor) { settings.layout = id }
+        SettingsGroup(title = "Layout") {
+            listOf("qwerty" to "QWERTY", "qwertz" to "QWERTZ", "azerty" to "AZERTY").forEach { (id, label) ->
+                ToggleOption(label, settings.layout == id, textColor, accentColor) { settings.layout = id }
+            }
         }
-        Divider(color = accentColor.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 16.dp))
 
-        Text("Features", style = MaterialTheme.typography.titleMedium, color = textColor)
-        var glide by remember { mutableStateOf(settings.glideEnabled) }
-        var correct by remember { mutableStateOf(settings.autoCorrect) }
-        var cap by remember { mutableStateOf(settings.autoCapitalize) }
-        var haptic by remember { mutableStateOf(settings.hapticFeedback) }
-        var sound by remember { mutableStateOf(settings.soundFeedback) }
+        SettingsGroup(title = "Features") {
+            var glide by remember { mutableStateOf(settings.glideEnabled) }
+            var correct by remember { mutableStateOf(settings.autoCorrect) }
+            var cap by remember { mutableStateOf(settings.autoCapitalize) }
+            var haptic by remember { mutableStateOf(settings.hapticFeedback) }
+            var sound by remember { mutableStateOf(settings.soundFeedback) }
+            var reducedMotion by remember { mutableStateOf(settings.reducedMotion) }
 
-        SwitchOption("Glide Typing", glide, textColor) { glide = it; settings.glideEnabled = it }
-        SwitchOption("Auto-Correct", correct, textColor) { correct = it; settings.autoCorrect = it }
-        SwitchOption("Auto-Capitalize", cap, textColor) { cap = it; settings.autoCapitalize = it }
-        SwitchOption("Haptic Feedback", haptic, textColor) { haptic = it; settings.hapticFeedback = it }
-        SwitchOption("Sound Feedback", sound, textColor) { sound = it; settings.soundFeedback = it }
+            SwitchOption("Glide Typing", glide, textColor, accentColor) { glide = it; settings.glideEnabled = it }
+            SwitchOption("Auto-Correct", correct, textColor, accentColor) { correct = it; settings.autoCorrect = it }
+            SwitchOption("Auto-Capitalize", cap, textColor, accentColor) { cap = it; settings.autoCapitalize = it }
+            SwitchOption("Haptic Feedback", haptic, textColor, accentColor) { haptic = it; settings.hapticFeedback = it }
+            SwitchOption("Sound Feedback", sound, textColor, accentColor) { sound = it; settings.soundFeedback = it }
+            SwitchOption("Reduce Motion", reducedMotion, textColor, accentColor) { reducedMotion = it; settings.reducedMotion = it }
+        }
+    }
+}
+
+@Composable
+fun SettingsGroup(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md)
+    ) {
+        Text(
+            title,
+            style = AppTypography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alphas.secondary)
+        )
+        content()
     }
 }
 
 @Composable
 fun ThemesTab(settings: Settings, themeEditor: ThemeEditor, textColor: ComposeColor, accentColor: ComposeColor) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+    ) {
         Text(
-            "Themes",
-            style = MaterialTheme.typography.headlineSmall,
-            color = textColor,
-            modifier = Modifier.padding(bottom = 16.dp)
+            "Color Themes",
+            style = AppTypography.headlineSmall,
+            color = textColor
         )
 
-        Text("Built-in Themes", style = MaterialTheme.typography.titleMedium, color = textColor)
-        Themes.all.forEach { t ->
-            ToggleOption(t.name, settings.theme == t.id, textColor) { settings.theme = t.id }
+        SettingsGroup(title = "Built-in Themes") {
+            Themes.all.forEach { t ->
+                ToggleOption(t.name, settings.theme == t.id, textColor, accentColor) { settings.theme = t.id }
+            }
         }
-        Divider(color = accentColor.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 16.dp))
 
-        Text("Custom Themes", style = MaterialTheme.typography.titleMedium, color = textColor)
-        val custom = remember { themeEditor.listCustom() }
-        custom.forEach { ct ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(ct.name, color = textColor)
-                IconButton(
-                    onClick = { themeEditor.delete(ct.id) },
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = accentColor)
+        SettingsGroup(title = "Custom Themes") {
+            val custom = remember { themeEditor.listCustom() }
+            if (custom.isEmpty()) {
+                Text(
+                    "No custom themes yet",
+                    style = AppTypography.bodySmall,
+                    color = textColor.copy(alpha = Alphas.secondary)
+                )
+            } else {
+                custom.forEach { ct ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Spacing.sm),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(ct.name, color = textColor, style = AppTypography.bodyMedium)
+                        IconButton(
+                            onClick = { themeEditor.delete(ct.id) },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = accentColor)
+                        }
+                    }
                 }
             }
         }
@@ -155,70 +199,82 @@ fun ThemesTab(settings: Settings, themeEditor: ThemeEditor, textColor: ComposeCo
 
 @Composable
 fun SnippetsTab(snippets: SnippetManager, textColor: ComposeColor, accentColor: ComposeColor) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+    ) {
         Text(
             "Text Snippets",
-            style = MaterialTheme.typography.headlineSmall,
-            color = textColor,
-            modifier = Modifier.padding(bottom = 16.dp)
+            style = AppTypography.headlineSmall,
+            color = textColor
         )
 
-        Text("Custom shortcuts: type trigger, auto-expand to full text", style = MaterialTheme.typography.bodySmall, color = textColor)
-        Spacer(modifier = Modifier.height(12.dp))
-
-        var triggerInput by remember { mutableStateOf("") }
-        var textInput by remember { mutableStateOf("") }
-
-        OutlinedTextField(
-            value = triggerInput,
-            onValueChange = { triggerInput = it },
-            label = { Text("Trigger (e.g., 'omw')", color = textColor) },
-            modifier = Modifier.fillMaxWidth()
+        Text(
+            "Quick replacements for common phrases",
+            style = AppTypography.bodySmall,
+            color = textColor.copy(alpha = Alphas.secondary),
+            modifier = Modifier.padding(bottom = Spacing.md)
         )
-        OutlinedTextField(
-            value = textInput,
-            onValueChange = { textInput = it },
-            label = { Text("Expansion text", color = textColor) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        )
-        Button(
-            onClick = {
-                if (triggerInput.isNotEmpty() && textInput.isNotEmpty()) {
-                    snippets.add(triggerInput, textInput)
-                    triggerInput = ""
-                    textInput = ""
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(top = 12.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(20.dp))
-            Text("Add", modifier = Modifier.padding(start = 4.dp))
-        }
 
-        Divider(color = accentColor.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 16.dp))
-
-        Text("Saved Snippets", style = MaterialTheme.typography.titleMedium, color = textColor)
-        snippets.getAll().forEach { s ->
-            Row(
+        val allSnippets = remember { snippets.getAll() }
+        if (allSnippets.isEmpty()) {
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(vertical = Spacing.md),
+                shape = Shapes.md,
+                colors = CardDefaults.cardColors(
+                    containerColor = SemanticColors.getSubtleAccent(accentColor, true)
+                )
             ) {
-                Column {
-                    Text(s.trigger, style = MaterialTheme.typography.bodyMedium, color = accentColor)
-                    Text(s.text.take(32), style = MaterialTheme.typography.bodySmall, color = textColor)
-                }
-                IconButton(
-                    onClick = { snippets.remove(s.trigger) },
-                    modifier = Modifier.size(24.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Spacing.lg),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = accentColor)
+                    Text(
+                        "No snippets yet",
+                        style = AppTypography.bodyMedium,
+                        color = textColor,
+                        modifier = Modifier.padding(bottom = Spacing.md)
+                    )
+                    Button(
+                        onClick = { /* Open snippet manager */ },
+                        shape = Shapes.md
+                    ) {
+                        Text("Create Snippet", style = AppTypography.labelLarge)
+                    }
+                }
+            }
+        } else {
+            allSnippets.forEach { snippet ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = Shapes.md,
+                    colors = CardDefaults.cardColors(
+                        containerColor = SemanticColors.getSubtleAccent(accentColor, true)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = Elevations.sm)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Spacing.lg),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(snippet.trigger, style = AppTypography.labelLarge, color = accentColor)
+                            Text(snippet.text.take(40), style = AppTypography.bodySmall, color = textColor.copy(alpha = 0.8f))
+                        }
+                        IconButton(
+                            onClick = { snippets.remove(snippet.trigger) },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = accentColor)
+                        }
+                    }
                 }
             }
         }
@@ -226,31 +282,52 @@ fun SnippetsTab(snippets: SnippetManager, textColor: ComposeColor, accentColor: 
 }
 
 @Composable
-fun ToggleOption(label: String, selected: Boolean, textColor: ComposeColor, onClick: (Boolean) -> Unit) {
+fun SwitchOption(
+    label: String,
+    value: Boolean,
+    textColor: ComposeColor,
+    accentColor: ComposeColor,
+    onValueChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = Spacing.sm),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, color = textColor)
-        RadioButton(
-            selected = selected,
-            onClick = { onClick(!selected) },
-            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+        Text(label, color = textColor, style = AppTypography.bodyMedium)
+        Switch(
+            checked = value,
+            onCheckedChange = onValueChange,
+            modifier = Modifier.scale(1.1f),
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = accentColor,
+                checkedTrackColor = accentColor.copy(alpha = 0.3f)
+            )
         )
     }
 }
 
 @Composable
-fun SwitchOption(label: String, value: Boolean, textColor: ComposeColor, onToggle: (Boolean) -> Unit) {
-    Row(
+fun ToggleOption(
+    label: String,
+    isSelected: Boolean,
+    textColor: ComposeColor,
+    accentColor: ComposeColor,
+    onToggle: () -> Unit
+) {
+    Button(
+        onClick = onToggle,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .height(40.dp),
+        shape = Shapes.md,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) accentColor else SemanticColors.getSubtleAccent(accentColor, true),
+            contentColor = if (isSelected) ComposeColor.White else textColor
+        )
     ) {
-        Text(label, color = textColor)
-        Switch(checked = value, onCheckedChange = onToggle)
+        Text(label, style = AppTypography.labelMedium)
     }
 }
