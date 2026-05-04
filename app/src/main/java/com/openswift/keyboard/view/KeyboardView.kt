@@ -54,6 +54,40 @@ class KeyboardView(
         textSize = 14f
         color = theme.suggestionText
     }
+    
+    // Additional Paint objects (allocated once, reused per frame)
+    private val suggestionBgPaint = Paint().apply { color = theme.suggestionBg }
+    private val pillPaint = Paint().apply { 
+        style = Paint.Style.FILL
+        color = theme.keyBackground
+    }
+    private val pillBorderPaint = Paint().apply { 
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+        color = theme.keyAccent
+    }
+    private val previewPaint = Paint().apply {
+        textSize = 10f
+        color = theme.suggestionText
+        alpha = 180
+    }
+    private val trailPaint = Paint().apply {
+        strokeWidth = 6f
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+        color = theme.gestureTrail
+    }
+    private val ripplePaint = Paint().apply {
+        style = Paint.Style.FILL
+        color = theme.keyAccent
+    }
+    private val keyModifierBgPaint = Paint().apply { color = theme.keyModifierBackground }
+    private val keyBgPaint = Paint().apply { color = theme.keyBackground }
+    private val shiftHighlightPaint = Paint().apply {
+        color = theme.keyAccent
+        style = Paint.Style.STROKE
+        strokeWidth = 3f
+    }
 
     private var isGliding = false
     private var glideStartTime = 0L
@@ -64,6 +98,7 @@ class KeyboardView(
     private data class Ripple(val x: Float, val y: Float, val startTime: Long)
     private val ripples = mutableListOf<Ripple>()
     private val rippleAnimDuration = 400L
+    private val maxRipples = 20 // Cap concurrent ripples to prevent memory bloat
     
     // Glide trail gradient
     private data class TrailPoint(val x: Float, val y: Float, val time: Long)
@@ -86,21 +121,9 @@ class KeyboardView(
 
         // Draw suggestions row as pills with preview
         var y = keyH * 0.1f
-        canvas.drawRect(0f, 0f, w, suggestionH, Paint().apply { color = theme.suggestionBg })
+        canvas.drawRect(0f, 0f, w, suggestionH, suggestionBgPaint)
         var x = 20f
         suggestionBounds.clear()
-        
-        val pillPaint = Paint().apply { style = Paint.Style.FILL; color = theme.keyBackground }
-        val pillBorderPaint = Paint().apply { 
-            style = Paint.Style.STROKE
-            strokeWidth = 2f
-            color = theme.keyAccent
-        }
-        val previewPaint = Paint().apply {
-            textSize = 10f
-            color = theme.suggestionText
-            alpha = 180
-        }
         
         for (sugg in suggestions.take(3)) {
             val suggWidth = suggestionPaint.measureText(sugg) + 20f
@@ -148,14 +171,16 @@ class KeyboardView(
                 keyBounds[key] = rect
 
                 val bgColor = if (key.isModifier) theme.keyModifierBackground else theme.keyBackground
+                val bgPaint = if (key.isModifier) keyModifierBgPaint else keyBgPaint
+                bgPaint.color = bgColor
                 canvas.drawRect(
                     x2, y, x2 + kw.toFloat(), y + keyH,
-                    Paint().apply { color = bgColor }
+                    bgPaint
                 )
                 if (shiftActive && key.code == KC.SHIFT) {
                     canvas.drawRect(
                         x2 + 2, y + 2, x2 + kw.toFloat() - 2, y + keyH - 2,
-                        Paint().apply { color = theme.keyAccent; style = Paint.Style.STROKE; strokeWidth = 3f }
+                        shiftHighlightPaint
                     )
                 }
                 canvas.drawText(
@@ -170,11 +195,6 @@ class KeyboardView(
         // Draw glide trail with fade gradient
         if (glideTrail.isNotEmpty()) {
             val now = System.currentTimeMillis()
-            val trailPaint = Paint().apply {
-                strokeWidth = 6f
-                strokeCap = Paint.Cap.ROUND
-                strokeJoin = Paint.Join.ROUND
-            }
             for (i in 0 until glideTrail.size - 1) {
                 val p1 = glideTrail[i]
                 val p2 = glideTrail[i + 1]
@@ -201,11 +221,8 @@ class KeyboardView(
             
             val radius = 2f + (48f * progress * resources.displayMetrics.density)
             val alpha = ((1f - progress) * 255).toInt()
-            val ripplePaint = Paint().apply {
-                color = theme.keyAccent
-                this.alpha = alpha
-                style = Paint.Style.FILL
-            }
+            ripplePaint.color = theme.keyAccent
+            ripplePaint.alpha = alpha
             canvas.drawCircle(ripple.x, ripple.y, radius, ripplePaint)
         }
         
@@ -226,9 +243,11 @@ class KeyboardView(
                 glideSamples.clear()
                 glideTrail.clear()
                 
-                // Add ripple on tap
-                ripples.add(Ripple(event.x, event.y, glideStartTime))
-                postInvalidateOnAnimation()
+                // Add ripple on tap (cap to maxRipples to prevent memory bloat)
+                if (ripples.size < maxRipples) {
+                    ripples.add(Ripple(event.x, event.y, glideStartTime))
+                    postInvalidateOnAnimation()
+                }
                 
                 val sample = sampleAt(event.x, event.y)
                 if (sample.char != ' ') glideSamples.add(sample)
