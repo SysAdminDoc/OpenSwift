@@ -59,6 +59,16 @@ class KeyboardView(
     private var glideStartTime = 0L
     private val glideSamples = mutableListOf<GlideDecoder.Sample>()
     private val suggestionBounds = mutableMapOf<String, Rect>()
+    
+    // Ripple effect tracking
+    private data class Ripple(val x: Float, val y: Float, val startTime: Long)
+    private val ripples = mutableListOf<Ripple>()
+    private val rippleAnimDuration = 400L
+    
+    // Glide trail gradient
+    private data class TrailPoint(val x: Float, val y: Float, val time: Long)
+    private val glideTrail = mutableListOf<TrailPoint>()
+    private val trailFadeMs = 300L
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
@@ -74,19 +84,56 @@ class KeyboardView(
         val keyH = (h * 0.22f)
         val suggestionH = keyH * 1.2f
 
-        // Draw suggestions row
+        // Draw suggestions row as pills with preview
         var y = keyH * 0.1f
         canvas.drawRect(0f, 0f, w, suggestionH, Paint().apply { color = theme.suggestionBg })
         var x = 20f
         suggestionBounds.clear()
+        
+        val pillPaint = Paint().apply { style = Paint.Style.FILL; color = theme.keyBackground }
+        val pillBorderPaint = Paint().apply { 
+            style = Paint.Style.STROKE
+            strokeWidth = 2f
+            color = theme.keyAccent
+        }
+        val previewPaint = Paint().apply {
+            textSize = 10f
+            color = theme.suggestionText
+            alpha = 180
+        }
+        
         for (sugg in suggestions.take(3)) {
-            val w2 = suggestionPaint.measureText(sugg) + 20f
-            val rect = Rect(x.toInt(), y.toInt(), (x + w2).toInt(), (y + suggestionH).toInt())
+            val suggWidth = suggestionPaint.measureText(sugg) + 20f
+            val pillHeight = suggestionH - 8f
+            val pillRadius = pillHeight / 2f
+            
+            val rect = Rect(x.toInt(), y.toInt(), (x + suggWidth).toInt(), (y + suggestionH).toInt())
             suggestionBounds[sugg] = rect
-            canvas.drawRect(x, y + 4f, x + w2, y + suggestionH - 4f, 
-                Paint().apply { color = theme.keyBackground; style = Paint.Style.STROKE; strokeWidth = 2f })
-            canvas.drawText(sugg, x + w2 / 2, y + keyH * 0.6f, suggestionPaint)
-            x += w2 + 10f
+            
+            // Draw pill background (rounded rectangle)
+            canvas.drawRoundRect(
+                x, y + 4f, x + suggWidth, y + pillHeight + 4f,
+                pillRadius, pillRadius,
+                pillPaint
+            )
+            
+            // Draw pill border
+            canvas.drawRoundRect(
+                x, y + 4f, x + suggWidth, y + pillHeight + 4f,
+                pillRadius, pillRadius,
+                pillBorderPaint
+            )
+            
+            // Draw main suggestion text
+            canvas.drawText(sugg, x + suggWidth / 2, y + keyH * 0.55f, suggestionPaint)
+            
+            // Draw small preview text (first few chars of next word)
+            if (sugg.length > 1) {
+                val preview = sugg.substring(0, minOf(3, sugg.length))
+                canvas.drawText(preview, x + suggWidth / 2, y + pillHeight, previewPaint)
+            }
+            
+            x += suggWidth + 10f
         }
 
         // Draw keyboard rows
@@ -120,19 +167,54 @@ class KeyboardView(
             y += keyH
         }
 
-        // Draw glide trail
-        if (glideSamples.size > 1) {
-            val trail = Paint().apply {
-                color = theme.gestureTrail
+        // Draw glide trail with fade gradient
+        if (glideTrail.isNotEmpty()) {
+            val now = System.currentTimeMillis()
+            val trailPaint = Paint().apply {
                 strokeWidth = 6f
                 strokeCap = Paint.Cap.ROUND
                 strokeJoin = Paint.Join.ROUND
             }
-            for (i in 0 until glideSamples.size - 1) {
-                val s1 = glideSamples[i]
-                val s2 = glideSamples[i + 1]
-                canvas.drawLine(s1.x, s1.y, s2.x, s2.y, trail)
+            for (i in 0 until glideTrail.size - 1) {
+                val p1 = glideTrail[i]
+                val p2 = glideTrail[i + 1]
+                val age = (now - p1.time).toFloat().coerceAtLeast(0f)
+                val progress = (age / trailFadeMs).coerceIn(0f, 1f)
+                val alpha = ((1f - progress) * 255).toInt()
+                trailPaint.color = theme.gestureTrail
+                trailPaint.alpha = alpha
+                canvas.drawLine(p1.x, p1.y, p2.x, p2.y, trailPaint)
             }
+        }
+
+        // Draw ripples
+        val now = System.currentTimeMillis()
+        val expiredIndices = mutableListOf<Int>()
+        for ((idx, ripple) in ripples.withIndex()) {
+            val elapsed = now - ripple.startTime
+            val progress = (elapsed.toFloat() / rippleAnimDuration).coerceIn(0f, 1f)
+            
+            if (progress >= 1f) {
+                expiredIndices.add(idx)
+                continue
+            }
+            
+            val radius = 2f + (48f * progress * resources.displayMetrics.density)
+            val alpha = ((1f - progress) * 255).toInt()
+            val ripplePaint = Paint().apply {
+                color = theme.keyAccent
+                this.alpha = alpha
+                style = Paint.Style.FILL
+            }
+            canvas.drawCircle(ripple.x, ripple.y, radius, ripplePaint)
+        }
+        
+        for (idx in expiredIndices.reversed()) {
+            ripples.removeAt(idx)
+        }
+        
+        if (ripples.isNotEmpty() || glideTrail.isNotEmpty()) {
+            postInvalidateOnAnimation()
         }
     }
 
@@ -142,6 +224,12 @@ class KeyboardView(
                 glideStartTime = System.currentTimeMillis()
                 isGliding = false
                 glideSamples.clear()
+                glideTrail.clear()
+                
+                // Add ripple on tap
+                ripples.add(Ripple(event.x, event.y, glideStartTime))
+                postInvalidateOnAnimation()
+                
                 val sample = sampleAt(event.x, event.y)
                 if (sample.char != ' ') glideSamples.add(sample)
                 return true
@@ -156,7 +244,9 @@ class KeyboardView(
                     if (sample.char != ' ' && (glideSamples.isEmpty() || sample.char != glideSamples.last().char)) {
                         glideSamples.add(sample)
                     }
-                    invalidate()
+                    // Append trail point for gradient fade
+                    glideTrail.add(TrailPoint(event.x, event.y, System.currentTimeMillis()))
+                    postInvalidateOnAnimation()
                 }
                 return true
             }
@@ -183,7 +273,8 @@ class KeyboardView(
                 }
                 isGliding = false
                 glideSamples.clear()
-                invalidate()
+                // Trail will fade naturally via alpha in onDraw
+                postInvalidateOnAnimation()
                 return true
             }
         }
