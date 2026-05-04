@@ -1,10 +1,17 @@
 package com.openswift.keyboard.data
 
 import android.content.Context
-import androidx.preference.PreferenceManager
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 
 class Settings(ctx: Context) {
-    private val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
+    private val prefs = EncryptedSharedPreferences.create(
+        ctx,
+        "openswift_prefs",
+        MasterKey.Builder(ctx).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+    )
 
     var theme: String
         get() = prefs.getString("theme", "amoled")!!
