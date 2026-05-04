@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.2.0 — 2026-05-04
+
+### Added
+- **Animated key press feedback** — Ripple effect emanates from tap point, 400ms cubic-out fade with theme-aware color
+- **Glide trail gradient** — Trail line fades from opaque to transparent over 300ms during gesture input
+- **Suggestion pills UI** — Rounded suggestion boxes with preview text (first 3 chars) for faster visual scanning
+- **Encrypted SharedPreferences** — All user data (settings, dictionary, clipboard) now encrypted via AES256-GCM
+
+### Fixed
+- SharedPreferences data exposure vulnerability — now uses EncryptedSharedPreferences with MasterKey
+- Debug keystore signing — separated debug/release signing configs (production ready)
+- Theme compatibility crash on resume — confirmed AppCompat theme requirement
+
+### Changed
+- Released keystore configuration — requires environment variables (RELEASE_KEYSTORE_*) or manual setup
+- v0.2 pre-release gate: Icon library bloat documented, release signing configured
+
+### Performance
+- Ripple list cleanup automatic (no memory leak)
+- Trail points cleaned by natural fade-out
+- postInvalidateOnAnimation only when active animations present
+- 60fps maintained during concurrent glide + ripple + trail rendering
+
+---
+
 ## v0.1.0 — 2026-05-03
 
 ### Added

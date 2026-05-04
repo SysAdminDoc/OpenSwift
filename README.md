@@ -1,6 +1,6 @@
 # OpenSwift
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
 
@@ -9,6 +9,8 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 ## Features
 
 - **Glide Typing** — Swipe continuously across keys for fast text entry; path-aware word decoding using Damerau-Levenshtein distance
+- **Animated Feedback** — Ripple effect on key tap, gradient fade on glide trail (v0.2+)
+- **Suggestion Pills** — Rounded pill-shaped suggestions with preview text (v0.2+)
 - **Word Prediction** — Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
 - **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
 - **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
