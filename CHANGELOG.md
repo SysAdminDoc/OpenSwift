@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.3.0 — 2026-05-04 (Accessibility & Privacy)
+
+### Added
+- **Reduced Motion accessibility toggle** — Disables ripple, trail, and animation effects for users with vestibular sensitivity
+- **High Contrast WCAG AAA theme** — 10th theme with 7:1+ contrast ratio for color-blind and low-vision users (black text on white, white text on black)
+- **Privacy Dashboard** — View clipboard history, dictionary stats, clear all data with single tap
+- **4 new themes** — Nord, Dracula, Tokyo Night, High Contrast (total 10 themes)
+
+### Changed
+- Settings reorganized into sections: Appearance, Keyboard, Typing, Feedback, **Accessibility**, Advanced
+- Navigation bar updated: Home / Settings / **Privacy** / About (4 tabs)
+
+### Fixed
+- Private accessors exposed via public methods (UserDictionary.getWordCount(), .reset())
+
+### Accessibility
+- Reduced motion compliant with WCAG 2.1 Level AAA
+- High Contrast theme meets WCAG AA (7:1 minimum contrast ratio)
+- Privacy Dashboard enables user control over local data
+
+---
+
 ## v0.2.0 — 2026-05-04
 
 ### Added

@@ -1,6 +1,6 @@
 # OpenSwift
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
 
@@ -14,16 +14,17 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Word Prediction** — Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
 - **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
 - **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
-- **6 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel (dark-first default)
+- **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
 - **Custom Themes** — Create and edit themes with full color customization
-- **Emoji Grid** — 60 tappable emoji (expandable in v0.3+)
+- **Emoji Grid** — 60 tappable emoji (expandable in v0.4+)
 - **Clipboard Manager** — Swipeable history of 25 recent items with delete-on-swipe
 - **Snippets/Text Expansion** — Create custom trigger→expansion pairs for instant text insertion
 - **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
 - **Voice Input** — Speech recognition with partial result streaming (v0.2+)
 - **Number Row** — Dedicated digit row for quick number entry (v0.2+)
 - **Usage Analytics** — Local-only keystroke, word, and correction tracking (no data leaves device)
-- **Accessibility** — Full TalkBack support, key announcements, navigation support
+- **Accessibility** — Full TalkBack support, key announcements, navigation support, reduced motion mode (v0.3+)
+- **Privacy Dashboard** — View clipboard history, dictionary stats, and delete all data (v0.3+)
 - **Per-App Settings** — Customize behavior per application (disable glide in games, adjust key height for email, etc.)
 - **Haptic & Sound Feedback** — Customizable vibration (20ms default) and optional audio cues
 
