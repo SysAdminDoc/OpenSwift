@@ -1,0 +1,2 @@
+-keep class com.openswift.keyboard.OpenSwiftIME { *; }
+-keepclassmembers class * extends android.inputmethodservice.InputMethodService { *; }

@@ -1,0 +1,11 @@
+*.apk
+*.aab
+.gradle/
+.idea/
+build/
+*.iml
+local.properties
+*.bak
+CLAUDE.md
+CODEX_CHANGELOG.md
+.claude/

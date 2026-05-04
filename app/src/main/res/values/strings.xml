@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenSwift</string>
+    <string name="subtype_en">English</string>
+    <string name="enable_keyboard">Enable OpenSwift in system settings</string>
+    <string name="select_keyboard">Choose OpenSwift as input method</string>
+    <string name="settings">Settings</string>
+</resources>
