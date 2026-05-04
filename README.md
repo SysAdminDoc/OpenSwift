@@ -8,14 +8,22 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 
 ## Features
 
-- **Glide Typing** — Swipe continuously across keys for fast text entry; path-aware word decoding using a curated dictionary
-- **Word Prediction** — Next-word suggestions with bigram learning; fuzzy matching + frequency weighting
-- **Auto-Correct** — Damerau-Levenshtein edit distance with budget-aware correction
-- **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups
-- **6 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel; dark-first default
-- **Clipboard Manager** — Quick access to 25 recent clipboard items
-- **Learning Dictionary** — Tracks user typing patterns; improves predictions over time
-- **Haptic & Sound Feedback** — Customizable haptic vibration and audio cues
+- **Glide Typing** — Swipe continuously across keys for fast text entry; path-aware word decoding using Damerau-Levenshtein distance
+- **Word Prediction** — Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
+- **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
+- **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
+- **6 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel (dark-first default)
+- **Custom Themes** — Create and edit themes with full color customization
+- **Emoji Grid** — 60 tappable emoji (expandable in v0.3+)
+- **Clipboard Manager** — Swipeable history of 25 recent items with delete-on-swipe
+- **Snippets/Text Expansion** — Create custom trigger→expansion pairs for instant text insertion
+- **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
+- **Voice Input** — Speech recognition with partial result streaming (v0.2+)
+- **Number Row** — Dedicated digit row for quick number entry (v0.2+)
+- **Usage Analytics** — Local-only keystroke, word, and correction tracking (no data leaves device)
+- **Accessibility** — Full TalkBack support, key announcements, navigation support
+- **Per-App Settings** — Customize behavior per application (disable glide in games, adjust key height for email, etc.)
+- **Haptic & Sound Feedback** — Customizable vibration (20ms default) and optional audio cues
 
 ## Architecture
 
@@ -38,21 +46,33 @@ Output: `app/build/outputs/apk/release/app-release.apk`
 ## Installation
 
 1. Download the APK from [Releases](https://github.com/SysAdminDoc/OpenSwift/releases)
-2. Enable unknown sources in Settings > Security
+2. Enable installation from unknown sources (Settings > Security)
 3. Install the APK
-4. Go to Settings > Languages & input > On-screen keyboard > Manage on-screen keyboards
-5. Enable OpenSwift
-6. Select OpenSwift as the default input method
+4. Go to **Settings > Languages & input > On-screen keyboard > Manage on-screen keyboards**
+5. Enable **OpenSwift**
+6. Set **OpenSwift** as default input method
+7. Open any text field and start typing!
+
+**See [SETUP.md](SETUP.md) for detailed setup, first-use tips, and troubleshooting.**
+
+## Documentation
+
+- **[SETUP.md](SETUP.md)** — Installation, first use, common tasks, troubleshooting
+- **[GUIDE.md](GUIDE.md)** — Power-user reference (glide tips, snippets, custom themes, accents)
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — For developers (dev setup, architecture, contributing features)
+- **[ROADMAP.md](ROADMAP.md)** — Planned features (v0.2–v1.0) and future ideas
+- **[EXAMPLES.md](EXAMPLES.md)** — Snippet packs, theme palettes, per-app configs, accessibility setup
 
 ## Settings
 
-- **Theme** — Choose from 6 curated dark and light themes
-- **Keyboard Layout** — Switch between QWERTY, QWERTZ, AZERTY
+- **Theme** — 6 built-in themes + custom theme editor
+- **Keyboard Layout** — QWERTY, QWERTZ, AZERTY
 - **Glide Typing** — Enable/disable swipe-to-type
 - **Auto-Correct** — Toggle fuzzy correction
-- **Auto-Capitalize** — Auto-capitalize after sentence-ending punctuation
-- **Haptic Feedback** — Vibration on keypress
-- **Key Height** — Adjust keyboard size (56–72 dp)
+- **Auto-Capitalize** — Auto-capitalize after punctuation
+- **Haptic Feedback** — Vibration on keypress (20ms default)
+- **Sound Feedback** — Optional audio cues
+- **Key Height** — Adjust keyboard size (48–72 dp)
 
 ## How It Works
 
@@ -89,28 +109,47 @@ Applied on space/enter:
 ## Tech Stack
 
 - **Language**: Kotlin
-- **UI**: Custom View + Jetpack Compose (settings)
+- **UI**: Custom View (KeyboardView) + Jetpack Compose (Settings)
 - **Persistence**: SharedPreferences (settings, clipboard, user dictionary)
+- **Dictionary**: 3500-word frequency-weighted English word list
 - **Targeting**: minSdk 26 (Android 8), targetSdk 35
+- **Build System**: Gradle 8+, ProGuard minification (R8)
 
-## Privacy
+## Privacy & Security
 
-- No cloud sync, no ads, no telemetry
-- All data stored locally
-- Open source (MIT)
+- **Zero cloud dependency** — No network requests, no account required
+- **Local-only** — All data stored in app's private SharedPreferences
+- **Open source** — MIT licensed; code is auditable
+- **No telemetry** — No analytics, no crash reporting, no ads
+- **Device learns** — User bigrams and word frequencies stay on-device
+- **Clipboard history** — Cleared on uninstall
 
 ## Roadmap
 
-- [ ] Emoji grid panel
-- [ ] Custom phrase/snippet insertion
-- [ ] Voice-to-text integration
-- [ ] Multilingual prediction
-- [ ] Swipe-up numbers row
-- [ ] Theme editor
+See [ROADMAP.md](ROADMAP.md) for detailed v0.2, v0.3, v0.4, v1.0 milestones.
+
+**v0.2 (Next)**: UI polish (ripple effects, animated suggestions), clipboard panel, number row toggle, onboarding wizard
+
+**v0.3**: Multilingual support (German, French, Spanish), advanced input methods, language detection
+
+**v0.4**: Cloud sync (optional), plugin system, custom input engines
+
+**v1.0**: Stable release, performance optimization, expanded emoji pack
 
 ## Contributing
 
-Contributions welcome. Open an issue or PR.
+OpenSwift is open to community contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development setup
+- Code style guidelines
+- How to add new features (example: adding a Dvorak layout)
+- Pull request workflow
+
+**Ideas for contributions:**
+- New keyboard layouts (Dvorak, Colemak, Bépo, etc.)
+- Language packs (German, French, Spanish word lists)
+- Additional themes
+- Accessibility improvements
+- Performance optimizations
 
 ## License
 
