@@ -13,18 +13,4 @@ class NumberRowVariant {
     // TODO: Implement on next release
 }
 
-/**
- * Per-app settings: disable glide in games, adjust key height per app, etc.
- * Requires PackageManager integration to detect foreground app.
- */
-class PerAppSettings {
-    // TODO: Implement on next release
-}
 
-/**
- * Custom phrase insertion: long-press specific key to open snippet manager.
- * Store snippets in SharedPreferences as JSON array.
- */
-class SnippetManager {
-    // TODO: Implement on next release
-}

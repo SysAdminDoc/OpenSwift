@@ -28,7 +28,7 @@ class ClipboardView @JvmOverloads constructor(
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.LEFT
         textSize = 12f
-        color = theme.keyText.and(0x99FFFFFF)
+        color = theme.keyText.and(0x99FFFFFF.toInt())
     }
     private val deletePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER

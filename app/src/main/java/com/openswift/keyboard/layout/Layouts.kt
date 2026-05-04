@@ -7,6 +7,22 @@ private fun letter(c: Char, popup: List<String> = emptyList()) =
 
 object Layouts {
 
+    /** Long-press popup alternates (mainly accents). */
+    private val popups: Map<Char, List<String>> = mapOf(
+        'a' to listOf("á","à","â","ä","ã","å","æ","ā"),
+        'e' to listOf("é","è","ê","ë","ē","ę"),
+        'i' to listOf("í","ì","î","ï","ī"),
+        'o' to listOf("ó","ò","ô","ö","õ","ø","œ","ō"),
+        'u' to listOf("ú","ù","û","ü","ū"),
+        'y' to listOf("ý","ÿ"),
+        'n' to listOf("ñ","ń"),
+        'c' to listOf("ç","ć","č"),
+        's' to listOf("ß","ś","š"),
+        'z' to listOf("ž","ź","ż"),
+        'l' to listOf("ł"),
+        'd' to listOf("đ"),
+    )
+
     val Qwerty = KeyLayout(
         "qwerty",
         listOf(
@@ -61,7 +77,7 @@ object Layouts {
         "symbols",
         listOf(
             "1234567890".map { letter(it) },
-            "@#$_&-+()/".map { letter(it) },
+            "@#\$_&-+()/".map { letter(it) },
             buildList {
                 add(Key("=\\<", KC.SHIFT_SYMBOLS, widthWeight = 1.5f, isModifier = true))
                 "*\"':;!?".forEach { add(letter(it)) }
@@ -91,22 +107,6 @@ object Layouts {
         Key("space", KC.SPACE, widthWeight = 4f),
         Key(".", KC.PERIOD, popup = listOf("…", "!", "?")),
         Key("⏎", KC.ENTER, widthWeight = 1.5f, isModifier = true)
-    )
-
-    /** Long-press popup alternates (mainly accents). */
-    private val popups: Map<Char, List<String>> = mapOf(
-        'a' to listOf("á","à","â","ä","ã","å","æ","ā"),
-        'e' to listOf("é","è","ê","ë","ē","ę"),
-        'i' to listOf("í","ì","î","ï","ī"),
-        'o' to listOf("ó","ò","ô","ö","õ","ø","œ","ō"),
-        'u' to listOf("ú","ù","û","ü","ū"),
-        'y' to listOf("ý","ÿ"),
-        'n' to listOf("ñ","ń"),
-        'c' to listOf("ç","ć","č"),
-        's' to listOf("ß","ś","š"),
-        'z' to listOf("ž","ź","ż"),
-        'l' to listOf("ł"),
-        'd' to listOf("đ"),
     )
 
     fun byId(id: String): KeyLayout = when (id) {

@@ -16,14 +16,14 @@ import com.openswift.keyboard.layout.KeyLayout
 import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.theme.Themes
 
-class KeyboardView @JvmOverloads constructor(
+class KeyboardView(
     ctx: Context,
-    attrs: AttributeSet? = null,
-    defStyle: Int = 0,
     private val settings: Settings,
     private val predictor: Predictor,
     private val userDict: UserDictionary,
-    private var keyLayout: KeyLayout
+    private var keyLayout: KeyLayout,
+    attrs: AttributeSet? = null,
+    defStyle: Int = 0
 ) : View(ctx, attrs, defStyle) {
 
     private var onKeyListener: ((Int, String) -> Unit)? = null
