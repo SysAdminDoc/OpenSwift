@@ -2,6 +2,7 @@ package com.openswift.keyboard.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,104 +31,121 @@ fun AboutUI(
             .fillMaxSize()
             .background(bgColor)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Spacing.md))
         
         Text(
             "⌨️",
-            fontSize = 56.sp,
-            modifier = Modifier.padding(bottom = 8.dp)
+            fontSize = 64.sp,
+            modifier = Modifier.padding(bottom = Spacing.md)
         )
         
         Text(
             "OpenSwift",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
+            style = AppTypography.displayLarge,
             color = textColor
         )
         
         Text(
-            "v0.1.0",
-            fontSize = 16.sp,
+            "v0.3.0",
+            style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f)
         )
         
         Divider(
-            color = accentColor.copy(alpha = 0.3f),
-            modifier = Modifier.padding(vertical = 16.dp)
+            color = accentColor.copy(alpha = Alphas.divider),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.lg)
         )
         
         // About section
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(accentColor.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = Shapes.md,
+            colors = CardDefaults.cardColors(
+                containerColor = SemanticColors.getSubtleAccent(accentColor, true)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = Elevations.sm)
         ) {
-            Text(
-                "About",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor
-            )
-            
-            Text(
-                "OpenSwift is a modern, fast, and customizable Android keyboard with glide typing, multiple themes, emoji support, and advanced prediction features.",
-                fontSize = 14.sp,
-                color = textColor.copy(alpha = 0.8f),
-                lineHeight = 20.sp
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                Text(
+                    "About",
+                    style = AppTypography.headlineSmall,
+                    color = textColor
+                )
+                
+                Text(
+                    "OpenSwift is a modern, fast, and customizable Android keyboard with glide typing, intelligent predictions, beautiful themes, and privacy at its core.",
+                    style = AppTypography.bodyMedium,
+                    color = textColor.copy(alpha = 0.8f),
+                    lineHeight = 24.sp
+                )
+            }
         }
         
         // Features checklist
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(accentColor.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = Shapes.md,
+            colors = CardDefaults.cardColors(
+                containerColor = SemanticColors.getSubtleAccent(accentColor, true)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = Elevations.sm)
         ) {
-            Text(
-                "Features",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor
-            )
-            
-            listOf(
-                "Glide typing with smart gesture detection",
-                "8+ beautiful color themes",
-                "Emoji keyboard with quick access",
-                "Word predictions & auto-correct",
-                "Multiple keyboard layouts (QWERTY, QWERTZ, AZERTY)",
-                "Customizable key height & spacing",
-                "Haptic feedback & sound effects",
-                "Privacy-focused (no telemetry)"
-            ).forEach { feature ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("✓", color = accentColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text(
-                        feature,
-                        fontSize = 14.sp,
-                        color = textColor.copy(alpha = 0.8f),
-                        modifier = Modifier.weight(1f)
-                    )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                Text(
+                    "Key Features",
+                    style = AppTypography.headlineSmall,
+                    color = textColor
+                )
+                
+                listOf(
+                    "Glide typing with smart gesture detection",
+                    "10 beautiful color themes including accessibility modes",
+                    "Animated ripple & glide trail effects",
+                    "Emoji keyboard with quick access",
+                    "Smart predictions & auto-correct",
+                    "Privacy dashboard & clipboard management",
+                    "Reduced motion mode for accessibility",
+                    "No telemetry—100% private"
+                ).forEach { feature ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("✓", color = accentColor, style = AppTypography.labelLarge)
+                        Text(
+                            feature,
+                            style = AppTypography.bodySmall,
+                            color = textColor.copy(alpha = 0.8f),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
         
         // Links
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {
             LinkButton(
                 label = "GitHub Repository",
@@ -154,9 +172,9 @@ fun AboutUI(
         // Footer
         Text(
             "Made with ❤️ for Android users",
-            fontSize = 12.sp,
+            style = AppTypography.labelMedium,
             color = textColor.copy(alpha = 0.6f),
-            modifier = Modifier.padding(vertical = 24.dp)
+            modifier = Modifier.padding(vertical = Spacing.xl)
         )
     }
 }
@@ -174,9 +192,12 @@ fun LinkButton(
                 Intent(Intent.ACTION_VIEW, Uri.parse(url))
             )
         },
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        shape = Shapes.md,
+        border = BorderStroke(1.dp, accentColor.copy(alpha = 0.5f))
     ) {
-        Text(label, modifier = Modifier.padding(8.dp))
+        Text(label, style = AppTypography.labelLarge, color = accentColor)
     }
 }

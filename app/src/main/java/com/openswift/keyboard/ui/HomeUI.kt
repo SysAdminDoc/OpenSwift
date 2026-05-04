@@ -43,7 +43,7 @@ fun HomeUI(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            accentColor.copy(alpha = 0.15f),
+                            accentColor.copy(alpha = 0.12f),
                             bgColor
                         )
                     )
@@ -52,21 +52,20 @@ fun HomeUI(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 Text(
                     "⌨️",
-                    fontSize = 48.sp
+                    fontSize = 56.sp
                 )
                 Text(
                     "OpenSwift",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = AppTypography.displayMedium,
                     color = textColor
                 )
                 Text(
-                    "Professional Android Keyboard",
-                    fontSize = 14.sp,
+                    "Professional Android keyboard",
+                    style = AppTypography.bodyMedium,
                     color = textColor.copy(alpha = 0.7f)
                 )
             }
@@ -75,26 +74,24 @@ fun HomeUI(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xl)
         ) {
             // Keyboard Preview
             Text(
                 "Preview",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                style = AppTypography.headlineSmall,
                 color = textColor,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = Spacing.sm)
             )
             KeyboardPreview(theme, modifier = Modifier.fillMaxWidth())
             
             // Feature Highlights
             Text(
                 "Features",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                style = AppTypography.headlineSmall,
                 color = textColor,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = Spacing.sm)
             )
             
             FeatureCard(
@@ -106,15 +103,15 @@ fun HomeUI(
             
             FeatureCard(
                 icon = "🎨",
-                title = "Multiple Themes",
-                description = "Switch between beautiful color schemes",
+                title = "Beautiful Themes",
+                description = "10 stunning color schemes to choose from",
                 accentColor = accentColor
             )
             
             FeatureCard(
                 icon = "😊",
                 title = "Emoji Support",
-                description = "Quick access to 2000+ emoji characters",
+                description = "Quick access to thousands of emoji",
                 accentColor = accentColor
             )
             
@@ -134,20 +131,20 @@ fun HomeUI(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = accentColor
                 ),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
+                shape = Shapes.md
             ) {
                 Text(
                     "Enable Keyboard",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    style = AppTypography.labelLarge,
+                    color = Color.White
                 )
             }
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Spacing.md))
             
             OutlinedButton(
                 onClick = { /* Scroll to settings tab */ },

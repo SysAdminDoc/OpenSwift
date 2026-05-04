@@ -23,23 +23,24 @@ fun FeatureCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(120.dp),
-        shape = RoundedCornerShape(12.dp),
+            .height(110.dp),
+        shape = Shapes.md,
         colors = CardDefaults.cardColors(
-            containerColor = accentColor.copy(alpha = 0.1f)
-        )
+            containerColor = SemanticColors.getSubtleAccent(accentColor, true)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevations.sm)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(Spacing.lg),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(60.dp)
-                    .background(accentColor, RoundedCornerShape(12.dp)),
+                    .size(56.dp)
+                    .background(accentColor.copy(alpha = 0.2f), Shapes.md),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -49,17 +50,16 @@ fun FeatureCard(
             }
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs)
             ) {
                 Text(
                     title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = AppTypography.labelLarge,
                     color = LocalContentColor.current
                 )
                 Text(
                     description,
-                    fontSize = 13.sp,
+                    style = AppTypography.bodySmall,
                     color = LocalContentColor.current.copy(alpha = 0.7f),
                     maxLines = 2
                 )

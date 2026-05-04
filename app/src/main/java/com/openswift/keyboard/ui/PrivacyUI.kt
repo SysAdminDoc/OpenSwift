@@ -3,6 +3,7 @@ package com.openswift.keyboard.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,8 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openswift.keyboard.data.ClipboardHistory
 import com.openswift.keyboard.engine.UserDictionary
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun PrivacyUI(
@@ -27,114 +26,264 @@ fun PrivacyUI(
 ) {
     var clipboardItems by remember { mutableStateOf(clipboardHistory.items()) }
     var wordCount by remember { mutableStateOf(userDict.getWordCount()) }
+    var showClearConfirmation by remember { mutableStateOf(false) }
+    var showDeleteAllConfirmation by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(bgColor)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(Spacing.lg)
     ) {
-        // Clipboard History Section
-        PrivacySectionHeader("📋 Clipboard History", textColor, accentColor)
-
-        if (clipboardItems.isEmpty()) {
-            Text(
-                "No clipboard items yet",
-                color = textColor.copy(alpha = 0.6f),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        } else {
-            clipboardItems.take(10).forEach { item ->
-                ClipboardItemRow(item, textColor)
-            }
-            if (clipboardItems.size > 10) {
-                Text(
-                    "...and ${clipboardItems.size - 10} more items",
-                    color = textColor.copy(alpha = 0.6f),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-            }
-        }
-
-        Button(
-            onClick = {
-                clipboardHistory.clear()
-                clipboardItems = emptyList()
-            },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = accentColor)
-        ) {
-            Text("Clear Clipboard", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Dictionary Stats Section
-        PrivacySectionHeader("📚 Dictionary & Learning", textColor, accentColor)
-
-        StatsRow("Words Learned", wordCount.toString(), textColor)
-
-        Button(
-            onClick = {
-                userDict.reset()
-                wordCount = 0
-            },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = accentColor)
-        ) {
-            Text("Reset Dictionary", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Data Deletion Section
-        PrivacySectionHeader("⚠️ Delete All Data", textColor, accentColor)
-
+        // Header
         Text(
-            "This will clear clipboard history and reset your learned dictionary. This action cannot be undone.",
+            "Privacy & Data",
+            style = AppTypography.displayMedium,
+            color = textColor,
+            modifier = Modifier.padding(bottom = Spacing.md)
+        )
+        
+        Text(
+            "Manage your data with full transparency. All data stays on your device.",
+            style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f),
-            fontSize = 12.sp,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier.padding(bottom = Spacing.lg)
         )
 
-        Button(
-            onClick = {
+        // Clipboard History Section
+        PrivacyDataCard(
+            icon = "📋",
+            title = "Clipboard History",
+            subtitle = "${clipboardItems.size} items saved",
+            bgColor = bgColor,
+            accentColor = accentColor,
+            textColor = textColor
+        ) {
+            if (clipboardItems.isEmpty()) {
+                Text(
+                    "No clipboard items yet. When you copy text, it will appear here.",
+                    style = AppTypography.bodySmall,
+                    color = textColor.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(Spacing.md)
+                )
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+                ) {
+                    clipboardItems.take(5).forEach { item ->
+                        ClipboardItemRow(item, textColor)
+                    }
+                    if (clipboardItems.size > 5) {
+                        Text(
+                            "...and ${clipboardItems.size - 5} more",
+                            style = AppTypography.labelSmall,
+                            color = textColor.copy(alpha = 0.5f),
+                            modifier = Modifier.padding(start = Spacing.md)
+                        )
+                    }
+                }
+            }
+            
+            Button(
+                onClick = { showClearConfirmation = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.md),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accentColor.copy(alpha = 0.15f),
+                    contentColor = accentColor
+                ),
+                shape = Shapes.sm
+            ) {
+                Text("Clear History", style = AppTypography.labelMedium)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.lg))
+
+        // Dictionary Stats Section
+        PrivacyDataCard(
+            icon = "📚",
+            title = "Learning & Dictionary",
+            subtitle = "$wordCount words learned",
+            bgColor = bgColor,
+            accentColor = accentColor,
+            textColor = textColor
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                StatsRow("Words Learned", wordCount.toString(), textColor)
+                Divider(
+                    color = textColor.copy(alpha = Alphas.divider),
+                    modifier = Modifier.padding(vertical = Spacing.sm)
+                )
+                Text(
+                    "Your device learns from your typing patterns to provide better predictions.",
+                    style = AppTypography.bodySmall,
+                    color = textColor.copy(alpha = 0.6f)
+                )
+            }
+            
+            Button(
+                onClick = {
+                    userDict.reset()
+                    wordCount = 0
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.md),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accentColor.copy(alpha = 0.15f),
+                    contentColor = accentColor
+                ),
+                shape = Shapes.sm
+            ) {
+                Text("Reset Dictionary", style = AppTypography.labelMedium)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.lg))
+
+        // Data Deletion Section
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = Shapes.md,
+            colors = CardDefaults.cardColors(
+                containerColor = SemanticColors.getSubtleAccent(Color(0xFFF44336), true)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = Elevations.sm)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                Text(
+                    "⚠️ Delete All Data",
+                    style = AppTypography.headlineSmall,
+                    color = Color(0xFFC62828)
+                )
+                
+                Text(
+                    "Permanently delete all clipboard history and learned words. This action cannot be undone.",
+                    style = AppTypography.bodySmall,
+                    color = textColor.copy(alpha = 0.8f)
+                )
+                
+                Button(
+                    onClick = { showDeleteAllConfirmation = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE53935)
+                    ),
+                    shape = Shapes.sm
+                ) {
+                    Text("Delete All Data", style = AppTypography.labelMedium, color = Color.White)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.xl))
+
+        // Privacy Policy Info
+        Text(
+            "🔒 All data is stored locally on your device. No data is sent to external servers.",
+            style = AppTypography.labelSmall,
+            color = textColor.copy(alpha = 0.6f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(accentColor.copy(alpha = 0.05f), Shapes.sm)
+                .padding(Spacing.md)
+        )
+
+        Spacer(modifier = Modifier.height(Spacing.lg))
+    }
+
+    // Confirmation dialogs
+    if (showClearConfirmation) {
+        ConfirmationDialog(
+            title = "Clear Clipboard History?",
+            message = "This will delete all ${clipboardItems.size} items. This cannot be undone.",
+            onConfirm = {
+                clipboardHistory.clear()
+                clipboardItems = emptyList()
+                showClearConfirmation = false
+            },
+            onDismiss = { showClearConfirmation = false },
+            accentColor = accentColor,
+            textColor = textColor,
+            bgColor = bgColor
+        )
+    }
+
+    if (showDeleteAllConfirmation) {
+        ConfirmationDialog(
+            title = "Delete All Data?",
+            message = "This will permanently delete clipboard history and learned words.",
+            onConfirm = {
                 clipboardHistory.clear()
                 userDict.reset()
                 clipboardItems = emptyList()
                 wordCount = 0
+                showDeleteAllConfirmation = false
             },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFCC0000))
-        ) {
-            Text("Delete All Data", color = Color.White, fontWeight = FontWeight.Bold)
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Privacy Policy
-        Text(
-            "🔒 All data is stored locally on your device. No data is sent to external servers.",
-            color = textColor.copy(alpha = 0.6f),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 8.dp)
+            onDismiss = { showDeleteAllConfirmation = false },
+            accentColor = Color(0xFFF44336),
+            textColor = textColor,
+            bgColor = bgColor,
+            isDangerous = true
         )
     }
 }
 
 @Composable
-fun PrivacySectionHeader(title: String, textColor: Color, accentColor: Color) {
-    Text(
-        title,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold,
-        color = accentColor,
-        modifier = Modifier.padding(vertical = 12.dp)
-    )
+fun PrivacyDataCard(
+    icon: String,
+    title: String,
+    subtitle: String,
+    bgColor: Color,
+    accentColor: Color,
+    textColor: Color,
+    content: @Composable () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = Shapes.md,
+        colors = CardDefaults.cardColors(
+            containerColor = SemanticColors.getSubtleAccent(accentColor, true)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = Elevations.sm)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                Text(icon, fontSize = 28.sp)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(title, style = AppTypography.headlineSmall, color = textColor)
+                    Text(subtitle, style = AppTypography.labelMedium, color = textColor.copy(alpha = 0.7f))
+                }
+            }
+            
+            Divider(
+                color = textColor.copy(alpha = Alphas.divider),
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            content()
+        }
+    }
 }
 
 @Composable
@@ -142,13 +291,19 @@ fun ClipboardItemRow(item: String, textColor: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(Spacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            item.take(50) + if (item.length > 50) "..." else "",
+            "•",
+            style = AppTypography.bodyMedium,
+            color = textColor.copy(alpha = 0.5f),
+            modifier = Modifier.padding(end = Spacing.sm)
+        )
+        Text(
+            item.take(50) + if (item.length > 50) "…" else "",
+            style = AppTypography.bodySmall,
             color = textColor,
-            fontSize = 13.sp,
             maxLines = 1,
             modifier = Modifier.weight(1f)
         )
@@ -158,12 +313,54 @@ fun ClipboardItemRow(item: String, textColor: Color) {
 @Composable
 fun StatsRow(label: String, value: String, textColor: Color) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, color = textColor, fontSize = 14.sp)
-        Text(value, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text(label, style = AppTypography.bodyMedium, color = textColor)
+        Text(value, style = AppTypography.labelLarge, color = textColor, fontWeight = FontWeight.Bold)
     }
 }
+
+@Composable
+fun ConfirmationDialog(
+    title: String,
+    message: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    accentColor: Color,
+    textColor: Color,
+    bgColor: Color,
+    isDangerous: Boolean = false
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(title, style = AppTypography.headlineSmall, color = textColor)
+        },
+        text = {
+            Text(message, style = AppTypography.bodyMedium, color = textColor.copy(alpha = 0.8f))
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDangerous) Color(0xFFF44336) else accentColor
+                ),
+                shape = Shapes.sm
+            ) {
+                Text("Confirm", style = AppTypography.labelMedium, color = Color.White)
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                shape = Shapes.sm
+            ) {
+                Text("Cancel", style = AppTypography.labelMedium)
+            }
+        },
+        containerColor = bgColor,
+        shape = Shapes.md
+    )
+}
+

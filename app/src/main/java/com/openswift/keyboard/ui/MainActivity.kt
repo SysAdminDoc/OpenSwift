@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ fun MainUI(settings: Settings, context: android.content.Context) {
     val keyBgColor = Color(theme.keyBackground)
     val textColor = Color(theme.keyText)
     val accentColor = Color(theme.keyAccent)
+    val surfaceColor = SemanticColors.getSurfaceColor(theme.background.toLong(), theme.keyBackground.toLong())
 
     Column(
         modifier = Modifier
@@ -66,56 +68,48 @@ fun MainUI(settings: Settings, context: android.content.Context) {
             }
         }
         
-        // Bottom navigation
+        // Premium bottom navigation bar
         NavigationBar(
             modifier = Modifier.fillMaxWidth(),
-            containerColor = keyBgColor.copy(alpha = 0.8f),
-            contentColor = textColor
+            containerColor = surfaceColor.copy(alpha = 0.95f),
+            contentColor = textColor,
+            tonalElevation = Elevations.md
         ) {
-            NavigationBarItem(
-                icon = { Text("🏠", fontSize = 20.sp) },
-                label = { Text("Home") },
-                selected = activeTab == 0,
-                onClick = { activeTab = 0 },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = accentColor.copy(alpha = 0.2f),
-                    selectedIconColor = accentColor,
-                    selectedTextColor = accentColor
-                )
+            val items = listOf(
+                Pair("🏠", "Home"),
+                Pair("⚙️", "Settings"),
+                Pair("🔒", "Privacy"),
+                Pair("ℹ️", "About")
             )
-            NavigationBarItem(
-                icon = { Text("⚙️", fontSize = 20.sp) },
-                label = { Text("Settings") },
-                selected = activeTab == 1,
-                onClick = { activeTab = 1 },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = accentColor.copy(alpha = 0.2f),
-                    selectedIconColor = accentColor,
-                    selectedTextColor = accentColor
+            
+            items.forEachIndexed { index, (icon, label) ->
+                NavigationBarItem(
+                    icon = {
+                        Text(
+                            icon,
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(bottom = if (activeTab == index) 2.dp else 0.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            label,
+                            style = AppTypography.labelSmall,
+                            fontSize = if (activeTab == index) 12.sp else 11.sp
+                        )
+                    },
+                    selected = activeTab == index,
+                    onClick = { activeTab = index },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = accentColor.copy(alpha = 0.12f),
+                        selectedIconColor = accentColor,
+                        selectedTextColor = accentColor,
+                        unselectedIconColor = textColor.copy(alpha = 0.6f),
+                        unselectedTextColor = textColor.copy(alpha = 0.6f)
+                    ),
+                    modifier = Modifier.weight(1f)
                 )
-            )
-            NavigationBarItem(
-                icon = { Text("🔒", fontSize = 20.sp) },
-                label = { Text("Privacy") },
-                selected = activeTab == 2,
-                onClick = { activeTab = 2 },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = accentColor.copy(alpha = 0.2f),
-                    selectedIconColor = accentColor,
-                    selectedTextColor = accentColor
-                )
-            )
-            NavigationBarItem(
-                icon = { Text("ℹ️", fontSize = 20.sp) },
-                label = { Text("About") },
-                selected = activeTab == 3,
-                onClick = { activeTab = 3 },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = accentColor.copy(alpha = 0.2f),
-                    selectedIconColor = accentColor,
-                    selectedTextColor = accentColor
-                )
-            )
+            }
         }
     }
 }
@@ -224,15 +218,23 @@ fun SettingsSection(
     content: @Composable () -> Unit
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         Text(
             title,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = accentColor
+            style = AppTypography.headlineSmall,
+            color = accentColor,
+            modifier = Modifier.padding(start = Spacing.sm)
         )
-        content()
+        Column(
+            modifier = Modifier.padding(start = Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            content()
+        }
     }
 }
 
@@ -267,14 +269,22 @@ fun SettingsList(
 @Composable
 fun ToggleOption(label: String, value: Boolean, onToggle: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.sm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, color = LocalContentColor.current)
+        Text(
+            label,
+            style = AppTypography.bodyMedium,
+            color = LocalContentColor.current,
+            modifier = Modifier.weight(1f)
+        )
         Switch(
             checked = value,
-            onCheckedChange = onToggle
+            onCheckedChange = onToggle,
+            modifier = Modifier.scale(0.95f)
         )
     }
 }
