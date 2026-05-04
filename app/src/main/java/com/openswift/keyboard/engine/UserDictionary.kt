@@ -16,6 +16,8 @@ class UserDictionary(ctx: Context) {
 
     init { load() }
 
+    fun getWordCount(): Int = unigram.size
+
     fun learn(prev: String?, word: String) {
         if (word.isBlank() || word.length > 32) return
         val w = word.lowercase()
@@ -36,6 +38,12 @@ class UserDictionary(ctx: Context) {
     }
 
     fun isKnown(w: String): Boolean = unigram.containsKey(w.lowercase())
+
+    fun reset() {
+        unigram.clear()
+        bigram.clear()
+        save()
+    }
 
     private fun load() {
         val raw = prefs.getString("data", null) ?: return

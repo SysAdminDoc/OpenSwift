@@ -64,4 +64,8 @@ class Settings(ctx: Context) {
     var incognitoMode: Boolean
         get() = prefs.getBoolean("incognito", false)
         set(v) { prefs.edit().putBoolean("incognito", v).apply() }
+
+    var reducedMotion: Boolean
+        get() = prefs.getBoolean("reduced_motion", false)
+        set(v) { prefs.edit().putBoolean("reduced_motion", v).apply() }
 }

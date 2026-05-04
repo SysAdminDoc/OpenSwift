@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openswift.keyboard.data.Settings
+import com.openswift.keyboard.data.ClipboardHistory
+import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.theme.Themes
 
 class MainActivity : AppCompatActivity() {
@@ -24,13 +26,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val settings = Settings(this@MainActivity)
-            MainUI(settings)
+            MainUI(settings, this@MainActivity)
         }
     }
 }
 
 @Composable
-fun MainUI(settings: Settings) {
+fun MainUI(settings: Settings, context: android.content.Context) {
     var activeTab by remember { mutableStateOf(0) }
     
     val theme = Themes.byId(settings.theme)
@@ -53,7 +55,14 @@ fun MainUI(settings: Settings) {
             when (activeTab) {
                 0 -> HomeUI(theme, bgColor, keyBgColor, textColor, accentColor)
                 1 -> EnhancedSettingsUI(settings, bgColor, textColor, accentColor)
-                2 -> AboutUI(bgColor, textColor, accentColor)
+                2 -> PrivacyUI(
+                    ClipboardHistory(context),
+                    UserDictionary(context),
+                    bgColor,
+                    textColor,
+                    accentColor
+                )
+                3 -> AboutUI(bgColor, textColor, accentColor)
             }
         }
         
@@ -86,10 +95,21 @@ fun MainUI(settings: Settings) {
                 )
             )
             NavigationBarItem(
-                icon = { Text("ℹ️", fontSize = 20.sp) },
-                label = { Text("About") },
+                icon = { Text("🔒", fontSize = 20.sp) },
+                label = { Text("Privacy") },
                 selected = activeTab == 2,
                 onClick = { activeTab = 2 },
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = accentColor.copy(alpha = 0.2f),
+                    selectedIconColor = accentColor,
+                    selectedTextColor = accentColor
+                )
+            )
+            NavigationBarItem(
+                icon = { Text("ℹ️", fontSize = 20.sp) },
+                label = { Text("About") },
+                selected = activeTab == 3,
+                onClick = { activeTab = 3 },
                 colors = NavigationBarItemDefaults.colors(
                     indicatorColor = accentColor.copy(alpha = 0.2f),
                     selectedIconColor = accentColor,
@@ -169,6 +189,15 @@ fun EnhancedSettingsUI(settings: Settings, bgColor: Color, textColor: Color, acc
         ) {
             ToggleOption("Haptic Feedback", settings.hapticFeedback) { settings.hapticFeedback = it }
             ToggleOption("Sound Effects", settings.soundFeedback) { settings.soundFeedback = it }
+        }
+
+        // Accessibility
+        SettingsSection(
+            title = "♿ Accessibility",
+            textColor = textColor,
+            accentColor = accentColor
+        ) {
+            ToggleOption("Reduce Motion", settings.reducedMotion) { settings.reducedMotion = it }
         }
 
         // Advanced

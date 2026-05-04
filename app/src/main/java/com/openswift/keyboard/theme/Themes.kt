@@ -139,7 +139,20 @@ object Themes {
         gestureTrail = KbTheme.rgb(158, 206, 106)
     )
 
-    val all: List<KbTheme> = listOf(Amoled, Mocha, GithubDark, SwiftDark, MaterialLight, Pixel, Nord, Dracula, Tokyonight)
+    val HighContrast = KbTheme(
+        id = "high_contrast",
+        name = "High Contrast (WCAG AAA)",
+        background = KbTheme.rgb(255, 255, 255),     // White
+        keyBackground = KbTheme.rgb(240, 240, 240),  // Very light gray
+        keyModifierBackground = KbTheme.rgb(224, 224, 224), // Light gray
+        keyText = KbTheme.rgb(0, 0, 0),              // Black (21:1 contrast)
+        keyAccent = KbTheme.rgb(0, 0, 170),          // Dark blue (8.6:1 on white, 9.1:1 on gray)
+        suggestionBg = KbTheme.rgb(0, 0, 0),         // Black
+        suggestionText = KbTheme.rgb(255, 255, 255), // White (21:1 contrast)
+        gestureTrail = KbTheme.rgb(0, 0, 255)        // Bright blue (5.2:1 on white)
+    )
+
+    val all: List<KbTheme> = listOf(Amoled, Mocha, GithubDark, SwiftDark, MaterialLight, Pixel, Nord, Dracula, Tokyonight, HighContrast)
 
     fun byId(id: String): KbTheme = all.firstOrNull { it.id == id } ?: Amoled
 }

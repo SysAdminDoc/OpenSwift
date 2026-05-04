@@ -192,8 +192,8 @@ class KeyboardView(
             y += keyH
         }
 
-        // Draw glide trail with fade gradient
-        if (glideTrail.isNotEmpty()) {
+        // Draw glide trail with fade gradient (skip if reduced motion enabled)
+        if (!settings.reducedMotion && glideTrail.isNotEmpty()) {
             val now = System.currentTimeMillis()
             for (i in 0 until glideTrail.size - 1) {
                 val p1 = glideTrail[i]
@@ -207,27 +207,31 @@ class KeyboardView(
             }
         }
 
-        // Draw ripples
-        val now = System.currentTimeMillis()
-        val expiredIndices = mutableListOf<Int>()
-        for ((idx, ripple) in ripples.withIndex()) {
-            val elapsed = now - ripple.startTime
-            val progress = (elapsed.toFloat() / rippleAnimDuration).coerceIn(0f, 1f)
-            
-            if (progress >= 1f) {
-                expiredIndices.add(idx)
-                continue
+        // Draw ripples (skip if reduced motion enabled)
+        if (!settings.reducedMotion) {
+            val now = System.currentTimeMillis()
+            val expiredIndices = mutableListOf<Int>()
+            for ((idx, ripple) in ripples.withIndex()) {
+                val elapsed = now - ripple.startTime
+                val progress = (elapsed.toFloat() / rippleAnimDuration).coerceIn(0f, 1f)
+                
+                if (progress >= 1f) {
+                    expiredIndices.add(idx)
+                    continue
+                }
+                
+                val radius = 2f + (48f * progress * resources.displayMetrics.density)
+                val alpha = ((1f - progress) * 255).toInt()
+                ripplePaint.color = theme.keyAccent
+                ripplePaint.alpha = alpha
+                canvas.drawCircle(ripple.x, ripple.y, radius, ripplePaint)
             }
             
-            val radius = 2f + (48f * progress * resources.displayMetrics.density)
-            val alpha = ((1f - progress) * 255).toInt()
-            ripplePaint.color = theme.keyAccent
-            ripplePaint.alpha = alpha
-            canvas.drawCircle(ripple.x, ripple.y, radius, ripplePaint)
-        }
-        
-        for (idx in expiredIndices.reversed()) {
-            ripples.removeAt(idx)
+            for (idx in expiredIndices.reversed()) {
+                ripples.removeAt(idx)
+            }
+        } else {
+            ripples.clear()
         }
         
         if (ripples.isNotEmpty() || glideTrail.isNotEmpty()) {
