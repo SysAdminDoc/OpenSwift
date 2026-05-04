@@ -93,29 +93,29 @@ class KeyboardView @JvmOverloads constructor(
         y = suggestionH + keyH * 0.1f
         keyBounds.clear()
         for (row in keyLayout.rows) {
-            val totalWeight = row.sumOf { it.widthWeight }
+            val totalWeight = row.sumOf { it.widthWeight.toDouble() }
             var x2 = 0f
             for (key in row) {
-                val kw = (w / totalWeight) * key.widthWeight
+                val kw = (w.toDouble() / totalWeight) * key.widthWeight.toDouble()
                 val rect = Rect(x2.toInt(), y.toInt(), (x2 + kw).toInt(), (y + keyH).toInt())
                 keyBounds[key] = rect
 
                 val bgColor = if (key.isModifier) theme.keyModifierBackground else theme.keyBackground
                 canvas.drawRect(
-                    x2, y, x2 + kw, y + keyH,
+                    x2, y, x2 + kw.toFloat(), y + keyH,
                     Paint().apply { color = bgColor }
                 )
                 if (shiftActive && key.code == KC.SHIFT) {
                     canvas.drawRect(
-                        x2 + 2, y + 2, x2 + kw - 2, y + keyH - 2,
+                        x2 + 2, y + 2, x2 + kw.toFloat() - 2, y + keyH - 2,
                         Paint().apply { color = theme.keyAccent; style = Paint.Style.STROKE; strokeWidth = 3f }
                     )
                 }
                 canvas.drawText(
-                    key.label, x2 + kw / 2, y + keyH * 0.6f,
+                    key.label, x2 + kw.toFloat() / 2, y + keyH * 0.6f,
                     textPaint
                 )
-                x2 += kw
+                x2 += kw.toFloat()
             }
             y += keyH
         }

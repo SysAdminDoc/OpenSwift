@@ -38,19 +38,19 @@ class NumberRowView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
         val row = layout.rows.first()
-        val totalWeight = row.sumOf { it.widthWeight }
-        var x = 0f
+        val totalWeight = row.sumOf { it.widthWeight.toDouble() }
+        var x = 0.0
 
         keyBounds.clear()
         for (key in row) {
-            val kw = (w / totalWeight) * key.widthWeight
+            val kw = (w.toDouble() / totalWeight) * key.widthWeight.toDouble()
             val rect = Rect(x.toInt(), 0, (x + kw).toInt(), h.toInt())
             keyBounds[key.label] = rect
 
-            canvas.drawRect(x, 0f, x + kw, h, Paint().apply { color = theme.keyBackground })
-            canvas.drawLine(x, 0f, x + kw, 0f, Paint().apply { color = theme.keyAccent })
-            canvas.drawLine(x, h - 1, x + kw, h - 1, Paint().apply { color = theme.keyAccent })
-            canvas.drawText(key.label, x + kw / 2, h * 0.6f, keyPaint)
+            canvas.drawRect(x.toFloat(), 0f, (x + kw).toFloat(), h, Paint().apply { color = theme.keyBackground })
+            canvas.drawLine(x.toFloat(), 0f, (x + kw).toFloat(), 0f, Paint().apply { color = theme.keyAccent })
+            canvas.drawLine(x.toFloat(), h - 1, (x + kw).toFloat(), h - 1, Paint().apply { color = theme.keyAccent })
+            canvas.drawText(key.label, (x + kw / 2).toFloat(), h * 0.6f, keyPaint)
             x += kw
         }
     }

@@ -49,6 +49,7 @@ class VoiceRecognizer(ctx: Context) {
                 }
                 onError?.invoke(msg)
             }
+            override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
         })
         recognizer.startListening(intent)
     }
