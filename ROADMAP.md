@@ -22,41 +22,84 @@
 
 ---
 
-## v0.2.0 (Next — UX Polish)
-**Focus: User experience, performance, visual polish**
+## v0.2.0 (Next — Core Features & Polish)
+**Focus: Swipe typing, prediction, accessibility baseline. [L1 Research: 14 NOW items, ~73 effort units]**
 
-### UI/UX
-- [ ] Animated key press feedback (ripple effect)
-- [ ] Glide trail gradient (fade from start to end)
-- [ ] Suggestion pills with preview text
-- [ ] Long-press popup animations
-- [ ] Clipboard history UI panel (swipe-accessible)
-- [ ] Number row toggle (double-tap space)
+### Core Input Methods (High Impact)
+- [ ] **Swipe typing gesture recognition** (Fit: 9/10, Impact: 10/10, Effort: 8) — Full glide path + scoring
+- [ ] **N-gram language model (3-gram)** (Fit: 10/10, Impact: 9/10, Effort: 7) — Reuse AOSP dictionary, frequency-based
+- [ ] **Autocorrection (edit distance)** (Fit: 9/10, Impact: 8/10, Effort: 6) — Damerau-Levenshtein
+- [ ] **Custom keyboard layouts (JSON)** (Fit: 10/10, Impact: 8/10, Effort: 6) — Theme + layout loader
 
-### Performance
-- [ ] WordList lazy loading (load on demand)
-- [ ] Glide decoder optimization (spatial hashing for candidate filtering)
-- [ ] Suggestion caching (don't recompute for identical prefix)
-- [ ] Reduced redraw frequency in KeyboardView
+### UI/UX Enhancements (Medium-High Impact)
+- [ ] **Animated key press feedback (ripple effect)** (Fit: 8/10, Impact: 7/10, Effort: 4) — Canvas animation
+- [ ] **Glide trail gradient (fade from start to end)** (Fit: 6/10, Impact: 5/10, Effort: 4) — Visual feedback
+- [ ] **Floating candidate strip with nav** (Fit: 8/10, Impact: 8/10, Effort: 6) — Above keyboard
+- [ ] **Per-key visual/haptic feedback** (Fit: 8/10, Impact: 7/10, Effort: 4) — Key press confirm
+- [ ] **Emoji picker with search** (Fit: 7/10, Impact: 7/10, Effort: 5) — Fast emoji select
+- [ ] **Material Design 3 theming** (Fit: 8/10, Impact: 7/10, Effort: 5) — Modern baseline (partial; v0.1 started)
+- [ ] **Dark/Light mode + AMOLED** (Fit: 8/10, Impact: 8/10, Effort: 4) — User choice + battery
+- [ ] **Material Design 3 full implementation** (Fit: 8/10, Impact: 7/10, Effort: 5)
 
-### Polish
-- [ ] Sound effects for key press (optional, settings)
-- [ ] Custom key sounds per app
-- [ ] Glide sensitivity slider (minimum swipe distance)
-- [ ] Key haptic strength adjustment
-- [ ] Splash screen + onboarding wizard
+### Performance & Memory (Essential)
+- [ ] **Lazy-loading language models** (Fit: 10/10, Impact: 6/10, Effort: 5) — Privacy + memory
+- [ ] **Predictive text caching (LRU)** (Fit: 8/10, Impact: 5/10, Effort: 3) — Instant suggestions
+- [ ] **WordList lazy loading (load on demand)** (Fit: 9/10, Impact: 6/10, Effort: 4)
+- [ ] **Glide decoder optimization** (Fit: 8/10, Impact: 6/10, Effort: 5) — Spatial hashing
+
+### Privacy & Security (v0.2 Baseline)
+- [ ] **Clipboard sanitization** (Fit: 10/10, Impact: 7/10, Effort: 3) — Clear after paste (CRITICAL)
+- [ ] **Local user dictionary + import** (Fit: 9/10, Impact: 6/10, Effort: 3) — CSV import
+- [ ] **Encrypted SharedPreferences** (Fit: 10/10, Impact: 7/10, Effort: 3) — DONE ✅ (74c09ff)
+
+### Foundation (Quick Wins)
+- [ ] **Multi-tap (T9 classic)** (Fit: 7/10, Impact: 4/10, Effort: 2) — Legacy fallback
+- [ ] **Long-press repeat** (Fit: 7/10, Impact: 4/10, Effort: 2)
 
 ---
 
-## v0.3.0 (Language & Learning)
-**Focus: Multilingual support, smarter prediction**
+## Known Issues (v0.2.0 Pre-Release Gate)
+**Must close before shipping v0.2.0**
 
-### Multilingual
-- [ ] French dictionary + layout
-- [ ] German dictionary + QWERTZ (extended with umlauts)
-- [ ] Spanish dictionary
-- [ ] Language auto-detection (based on typed words)
-- [ ] Language-specific punctuation rules
+### Critical Findings (L3 Security Audit)
+- [ ] **Icon library bloat** — `material-icons-extended` (2.5MB) unused. Switch to `material-icons`. (3 min fix) [D-PHASE]
+- [ ] **Release signing** — Configure production keystore (env vars). Debug key only in dev. (15 min setup) [DONE ✅ app/build.gradle.kts]
+- [ ] **SharedPreferences encryption** — Fully encrypted via androidx.security. (DONE ✅ Settings.kt 74c09ff)
+
+### Medium Priority (Ship after v0.2)
+- [ ] App crashes on resume (logcat: theme null reference?)
+- [ ] Glide path sometimes doesn't trigger (edge case: rapid swipes)
+- [ ] Emoji picker laggy on first load (60+ emoji, unoptimized render)
+
+---
+
+## v0.3.0 (Localization & Accessibility)
+**Focus: 12 NEXT items from L1 research. [Effort: ~71 units] Charter: accessibility + multilingual foundation**
+
+### Localization
+- [ ] **RTL support (Arabic, Hebrew)** (Fit: 9/10, Effort: 5) — 300M+ MENA users
+- [ ] **Language pack installer** (Fit: 9/10, Effort: 5) — Downloadable dictionaries
+- [ ] **Language auto-detection** (Fit: 8/10, Effort: 4) — Infer from typed words
+- [ ] **Per-language layouts** (Fit: 8/10, Effort: 4) — AZERTY, QWERTZ variants
+
+### Accessibility
+- [ ] **TalkBack screen reader** (Fit: 9/10, Effort: 5) — Legal requirement
+- [ ] **High contrast + AAA WCAG** (Fit: 8/10, Effort: 4) — Pass compliance
+- [ ] **Reduced motion accessibility** (Fit: 9/10, Effort: 3) — Disable animations on demand
+- [ ] **One-handed layout modes** (Fit: 8/10, Effort: 4) — Left/right keyboards
+
+### Prediction Intelligence
+- [ ] **Spell checker (Hunspell)** (Fit: 8/10, Effort: 6) — Error detection + suggestions
+- [ ] **Learner mode (warmup)** (Fit: 7/10, Effort: 4) — Adapt to user style
+- [ ] **Privacy dashboard** (Fit: 10/10, Effort: 5) — Audit log + data transparency
+
+### Themes & Distribution
+- [ ] **Theme package format (ZIP)** (Fit: 8/10, Effort: 5) — Community themes
+
+---
+
+## v0.4.0 (Advanced & CJK)
+**[LATER tier. Effort: ~67 units]**
 
 ### Prediction Improvements
 - [ ] 3-gram scoring (prev2_word → prev_word → word)
