@@ -24,14 +24,19 @@ class OpenSwiftIME : InputMethodService() {
     private lateinit var wordList: WordList
     private lateinit var userDict: UserDictionary
     private lateinit var predictor: Predictor
+    private lateinit var snippets: com.openswift.keyboard.data.SnippetManager
     private lateinit var keyboardView: KeyboardView
     private lateinit var emojiView: EmojiView
+    private lateinit var clipboardView: com.openswift.keyboard.ui.ClipboardView
+    private lateinit var numberRowView: com.openswift.keyboard.view.NumberRowView
     private lateinit var vibrator: Vibrator
 
     private var currentLayout = Layouts.Qwerty
     private var shiftActive = false
     private var symbolsActive = false
     private var emojiMode = false
+    private var clipboardMode = false
+    private var numberRowShown = false
     private var previousWord = ""
     private var currentWord = StringBuilder()
 
@@ -42,6 +47,7 @@ class OpenSwiftIME : InputMethodService() {
         wordList = WordList(this)
         userDict = UserDictionary(this)
         predictor = Predictor(wordList, userDict)
+        snippets = com.openswift.keyboard.data.SnippetManager(this)
         vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
     }
 
@@ -61,6 +67,21 @@ class OpenSwiftIME : InputMethodService() {
             emojiMode = false
             showKeyboardView()
         }
+
+        clipboardView = com.openswift.keyboard.ui.ClipboardView(this)
+        clipboardView.onItemSelected = { item ->
+            currentInputConnection?.commitText(item, 1)
+            clipboardMode = false
+            showKeyboardView()
+        }
+        clipboardView.onItemDeleted = { _ ->
+            clipboardView.refresh()
+        }
+
+        numberRowView = com.openswift.keyboard.view.NumberRowView(this)
+        numberRowView.onKeyListener = { code, label ->
+            onKeyPressed(code, label)
+        }
         
         return keyboardView
     }
@@ -73,6 +94,8 @@ class OpenSwiftIME : InputMethodService() {
         shiftActive = false
         symbolsActive = false
         emojiMode = false
+        clipboardMode = false
+        numberRowShown = false
         updateSuggestions()
     }
 
@@ -125,6 +148,7 @@ class OpenSwiftIME : InputMethodService() {
             }
             KC.ABC -> {
                 symbolsActive = false
+                numberRowShown = false
                 currentLayout = Layouts.byId(settings.layout)
                 keyboardView.updateLayout(currentLayout)
             }
@@ -151,11 +175,22 @@ class OpenSwiftIME : InputMethodService() {
             else -> {
                 if (label.length == 1) {
                     val ch = label[0]
-                    currentWord.append(ch)
-                    val text = if (shiftActive) ch.uppercase() else ch.toString()
-                    ic.commitText(text, 1)
-                    shiftActive = false
-                    keyboardView.setShift(false)
+                    if (ch.isDigit()) {
+                        // Check for snippet expansion
+                        val expanded = snippets.expand(ch.toString())
+                        if (expanded != null) {
+                            ic.commitText(expanded, 1)
+                        } else {
+                            currentWord.append(ch)
+                            ic.commitText(ch.toString(), 1)
+                        }
+                    } else {
+                        currentWord.append(ch)
+                        val text = if (shiftActive) ch.uppercase() else ch.toString()
+                        ic.commitText(text, 1)
+                        shiftActive = false
+                        keyboardView.setShift(false)
+                    }
                     updateSuggestions()
                 }
             }
@@ -186,6 +221,11 @@ class OpenSwiftIME : InputMethodService() {
 
     private fun showEmojiView() {
         setInputView(emojiView)
+    }
+
+    private fun showClipboardView() {
+        clipboardMode = true
+        setInputView(clipboardView)
     }
 
     private fun showKeyboardView() {
