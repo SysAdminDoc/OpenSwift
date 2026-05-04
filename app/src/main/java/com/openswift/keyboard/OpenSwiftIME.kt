@@ -1,13 +1,11 @@
 package com.openswift.keyboard
 
 import android.inputmethodservice.InputMethodService
-import android.inputmethodservice.Keyboard
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.os.Vibrator
-import android.media.AudioManager
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
 import com.openswift.keyboard.engine.WordList
@@ -17,6 +15,7 @@ import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.layout.Layouts
 import com.openswift.keyboard.theme.Themes
 import com.openswift.keyboard.view.KeyboardView
+import com.openswift.keyboard.ui.EmojiView
 
 class OpenSwiftIME : InputMethodService() {
 
@@ -26,11 +25,13 @@ class OpenSwiftIME : InputMethodService() {
     private lateinit var userDict: UserDictionary
     private lateinit var predictor: Predictor
     private lateinit var keyboardView: KeyboardView
+    private lateinit var emojiView: EmojiView
     private lateinit var vibrator: Vibrator
 
     private var currentLayout = Layouts.Qwerty
     private var shiftActive = false
     private var symbolsActive = false
+    private var emojiMode = false
     private var previousWord = ""
     private var currentWord = StringBuilder()
 
@@ -53,6 +54,14 @@ class OpenSwiftIME : InputMethodService() {
         keyboardView.setOnGlideListener { word ->
             commitWord(word)
         }
+        
+        emojiView = EmojiView(this)
+        emojiView.onEmojiSelected = { emoji ->
+            currentInputConnection?.commitText(emoji, 1)
+            emojiMode = false
+            showKeyboardView()
+        }
+        
         return keyboardView
     }
 
@@ -63,6 +72,7 @@ class OpenSwiftIME : InputMethodService() {
         previousWord = ""
         shiftActive = false
         symbolsActive = false
+        emojiMode = false
         updateSuggestions()
     }
 
@@ -123,7 +133,8 @@ class OpenSwiftIME : InputMethodService() {
                 keyboardView.updateLayout(currentLayout)
             }
             KC.EMOJI -> {
-                // TODO: show emoji grid
+                emojiMode = true
+                showEmojiView()
             }
             KC.SETTINGS -> {
                 startActivity(android.content.Intent(this, com.openswift.keyboard.ui.MainActivity::class.java))
@@ -138,13 +149,15 @@ class OpenSwiftIME : InputMethodService() {
                 updateSuggestions()
             }
             else -> {
-                val ch = label[0]
-                currentWord.append(ch)
-                val text = if (shiftActive) ch.uppercase() else ch.toString()
-                ic.commitText(text, 1)
-                shiftActive = false
-                keyboardView.setShift(false)
-                updateSuggestions()
+                if (label.length == 1) {
+                    val ch = label[0]
+                    currentWord.append(ch)
+                    val text = if (shiftActive) ch.uppercase() else ch.toString()
+                    ic.commitText(text, 1)
+                    shiftActive = false
+                    keyboardView.setShift(false)
+                    updateSuggestions()
+                }
             }
         }
         if (settings.hapticFeedback) vibrator.vibrate(20)
@@ -171,6 +184,14 @@ class OpenSwiftIME : InputMethodService() {
         keyboardView.setSuggestions(sugg)
     }
 
+    private fun showEmojiView() {
+        setInputView(emojiView)
+    }
+
+    private fun showKeyboardView() {
+        setInputView(keyboardView)
+    }
+
     override fun onFinishInput() {
         super.onFinishInput()
         if (currentWord.isNotEmpty()) {
@@ -179,3 +200,4 @@ class OpenSwiftIME : InputMethodService() {
         }
     }
 }
+

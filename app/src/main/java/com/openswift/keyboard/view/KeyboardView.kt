@@ -30,13 +30,8 @@ class KeyboardView @JvmOverloads constructor(
     private var onGlideListener: ((String) -> Unit)? = null
     private var suggestions: List<String> = emptyList()
     private var shiftActive = false
-    private var glideDecoder = GlideDecoder(predictor.let { userDict.let { /* access wordlist */ } }.run {
-        // Placeholder: in real code, inject wordList via constructor
-        GlideDecoder(
-            object : com.openswift.keyboard.engine.WordList(ctx) {},
-            userDict
-        )
-    })
+    private val wordList = com.openswift.keyboard.engine.WordList(ctx)
+    private val glideDecoder = GlideDecoder(wordList, userDict)
 
     private val theme = Themes.byId(settings.theme)
     private val keyBounds = mutableMapOf<Key, Rect>()
@@ -61,7 +56,9 @@ class KeyboardView @JvmOverloads constructor(
     }
 
     private var isGliding = false
+    private var glideStartTime = 0L
     private val glideSamples = mutableListOf<GlideDecoder.Sample>()
+    private val suggestionBounds = mutableMapOf<String, Rect>()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
@@ -77,12 +74,17 @@ class KeyboardView @JvmOverloads constructor(
         val keyH = (h * 0.22f)
         val suggestionH = keyH * 1.2f
 
-        // Draw suggestions
+        // Draw suggestions row
         var y = keyH * 0.1f
         canvas.drawRect(0f, 0f, w, suggestionH, Paint().apply { color = theme.suggestionBg })
         var x = 20f
+        suggestionBounds.clear()
         for (sugg in suggestions.take(3)) {
             val w2 = suggestionPaint.measureText(sugg) + 20f
+            val rect = Rect(x.toInt(), y.toInt(), (x + w2).toInt(), (y + suggestionH).toInt())
+            suggestionBounds[sugg] = rect
+            canvas.drawRect(x, y + 4f, x + w2, y + suggestionH - 4f, 
+                Paint().apply { color = theme.keyBackground; style = Paint.Style.STROKE; strokeWidth = 2f })
             canvas.drawText(sugg, x + w2 / 2, y + keyH * 0.6f, suggestionPaint)
             x += w2 + 10f
         }
@@ -137,15 +139,21 @@ class KeyboardView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                isGliding = settings.glideEnabled
+                glideStartTime = System.currentTimeMillis()
+                isGliding = false
                 glideSamples.clear()
-                if (isGliding) glideSamples.add(sampleAt(event.x, event.y))
+                val sample = sampleAt(event.x, event.y)
+                if (sample.char != ' ') glideSamples.add(sample)
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                val elapsed = System.currentTimeMillis() - glideStartTime
+                if (!isGliding && elapsed > 80L && settings.glideEnabled) {
+                    isGliding = true
+                }
                 if (isGliding) {
                     val sample = sampleAt(event.x, event.y)
-                    if (glideSamples.isEmpty() || sample.char != glideSamples.last().char) {
+                    if (sample.char != ' ' && (glideSamples.isEmpty() || sample.char != glideSamples.last().char)) {
                         glideSamples.add(sample)
                     }
                     invalidate()
@@ -153,10 +161,24 @@ class KeyboardView @JvmOverloads constructor(
                 return true
             }
             MotionEvent.ACTION_UP -> {
-                if (isGliding && glideSamples.size > 2) {
+                if (isGliding && glideSamples.size >= 2) {
                     val decoded = glideDecoder.decode(glideSamples)
                     if (decoded.isNotEmpty()) {
                         onGlideListener?.invoke(decoded.first())
+                    }
+                } else if (!isGliding && glideSamples.isNotEmpty()) {
+                    // Tap on a single key
+                    val key = findKeyAt(event.x, event.y)
+                    if (key != null) {
+                        onKeyListener?.invoke(key.code, key.label)
+                    }
+                } else if (!isGliding) {
+                    // Check if suggestion was tapped
+                    for ((sugg, rect) in suggestionBounds) {
+                        if (rect.contains(event.x.toInt(), event.y.toInt())) {
+                            onGlideListener?.invoke(sugg)
+                            break
+                        }
                     }
                 }
                 isGliding = false
@@ -166,6 +188,15 @@ class KeyboardView @JvmOverloads constructor(
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    private fun findKeyAt(x: Float, y: Float): Key? {
+        for ((key, rect) in keyBounds) {
+            if (rect.contains(x.toInt(), y.toInt())) {
+                return key
+            }
+        }
+        return null
     }
 
     private fun sampleAt(x: Float, y: Float): GlideDecoder.Sample {
