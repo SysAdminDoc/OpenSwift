@@ -34,7 +34,7 @@ class Settings(ctx: Context) {
         set(v) { prefs.edit().putBoolean("autocap", v).apply() }
 
     var numberRow: Boolean
-        get() = prefs.getBoolean("numrow", false)
+        get() = prefs.getBoolean("numrow", true)
         set(v) { prefs.edit().putBoolean("numrow", v).apply() }
 
     var hapticFeedback: Boolean

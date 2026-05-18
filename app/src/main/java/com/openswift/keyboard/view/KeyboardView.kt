@@ -32,6 +32,21 @@ class KeyboardView(
     private var shiftActive = false
     private val wordList = com.openswift.keyboard.engine.WordList(ctx)
     private val glideDecoder = GlideDecoder(wordList, userDict)
+    
+    // Compute layout with number row if enabled
+    private var effectiveLayout: KeyLayout = if (settings.numberRow) {
+        // Prepend number row to the layout
+        val numberRow = (1..10).map { i ->
+            val ch = if (i == 10) '0' else (i + 48).toChar()
+            Key(ch.toString(), ch.code)
+        }
+        KeyLayout(
+            keyLayout.id + "_with_numbers",
+            listOf(numberRow) + keyLayout.rows
+        )
+    } else {
+        keyLayout
+    }
 
     private val theme = Themes.byId(settings.theme)
     private val keyBounds = mutableMapOf<Key, Rect>()
@@ -46,8 +61,9 @@ class KeyboardView(
     }
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
-        textSize = 18f
+        textSize = 24f
         color = theme.keyText
+        typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
     }
     private val suggestionPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -107,7 +123,15 @@ class KeyboardView(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
-        val h = (settings.keyHeightDp * 4.5f * resources.displayMetrics.density).toInt()
+        val density = resources.displayMetrics.density
+        
+        // Calculate total keyboard height: all key rows + suggestion row
+        val keyHeightPx = (settings.keyHeightDp * density).toInt()
+        val numRows = effectiveLayout.rows.size // includes number row if enabled
+        val totalRowsHeight = keyHeightPx * numRows
+        val suggestionRowHeight = (keyHeightPx * 1.2f).toInt()
+        val h = suggestionRowHeight + totalRowsHeight + (keyHeightPx * 0.2f).toInt() // spacing buffer
+        
         setMeasuredDimension(w, h)
     }
 
@@ -116,80 +140,115 @@ class KeyboardView(
 
         val w = width.toFloat()
         val h = height.toFloat()
-        val keyH = (h * 0.22f)
-        val suggestionH = keyH * 1.2f
-
+        val density = resources.displayMetrics.density
+        
+        // Calculate key height in pixels
+        val keyHeightPx = (settings.keyHeightDp * density)
+        val suggestionHeightPx = keyHeightPx * 1.2f
+        val rowSpacingPx = 2f * density // small gap between rows
+        
+        // Update paint text sizes based on key height - MUCH LARGER for readability
+        textPaint.textSize = (keyHeightPx * 0.60f) // 60% of key height - significantly larger
+        suggestionPaint.textSize = (keyHeightPx * 0.40f)
+        previewPaint.textSize = (keyHeightPx * 0.18f)
+        
         // Draw suggestions row as pills with preview
-        var y = keyH * 0.1f
-        canvas.drawRect(0f, 0f, w, suggestionH, suggestionBgPaint)
-        var x = 20f
+        var y = 4f * density // small top padding
+        canvas.drawRect(0f, 0f, w, y + suggestionHeightPx, suggestionBgPaint)
+        var x = 12f * density // responsive padding
         suggestionBounds.clear()
         
         for (sugg in suggestions.take(3)) {
-            val suggWidth = suggestionPaint.measureText(sugg) + 20f
-            val pillHeight = suggestionH - 8f
+            val suggWidth = suggestionPaint.measureText(sugg) + (16f * density)
+            val pillHeight = suggestionHeightPx - (8f * density)
             val pillRadius = pillHeight / 2f
+            val pillY = y + (4f * density)
             
-            val rect = Rect(x.toInt(), y.toInt(), (x + suggWidth).toInt(), (y + suggestionH).toInt())
+            // Prevent overflow: stop adding suggestions if they'd go off-screen
+            if (x + suggWidth > w) break
+            
+            val rect = Rect(x.toInt(), pillY.toInt(), (x + suggWidth).toInt(), (pillY + suggestionHeightPx).toInt())
             suggestionBounds[sugg] = rect
             
             // Draw pill background (rounded rectangle)
             canvas.drawRoundRect(
-                x, y + 4f, x + suggWidth, y + pillHeight + 4f,
+                x, pillY, x + suggWidth, pillY + pillHeight,
                 pillRadius, pillRadius,
                 pillPaint
             )
             
             // Draw pill border
             canvas.drawRoundRect(
-                x, y + 4f, x + suggWidth, y + pillHeight + 4f,
+                x, pillY, x + suggWidth, pillY + pillHeight,
                 pillRadius, pillRadius,
                 pillBorderPaint
             )
             
-            // Draw main suggestion text
-            canvas.drawText(sugg, x + suggWidth / 2, y + keyH * 0.55f, suggestionPaint)
+            // Draw main suggestion text (centered vertically in pill)
+            val textY = pillY + (pillHeight / 2) + (4f * density)
+            canvas.drawText(sugg, x + suggWidth / 2, textY, suggestionPaint)
             
-            // Draw small preview text (first few chars of next word)
-            if (sugg.length > 1) {
-                val preview = sugg.substring(0, minOf(3, sugg.length))
-                canvas.drawText(preview, x + suggWidth / 2, y + pillHeight, previewPaint)
-            }
-            
-            x += suggWidth + 10f
+            x += suggWidth + (8f * density)
         }
 
         // Draw keyboard rows
-        y = suggestionH + keyH * 0.1f
+        y = y + suggestionHeightPx + (4f * density)
         keyBounds.clear()
-        for (row in keyLayout.rows) {
+        val keyPadding = 1.5f * density
+        for (row in effectiveLayout.rows) {
             val totalWeight = row.sumOf { it.widthWeight.toDouble() }
             var x2 = 0f
             for (key in row) {
                 val kw = (w.toDouble() / totalWeight) * key.widthWeight.toDouble()
-                val rect = Rect(x2.toInt(), y.toInt(), (x2 + kw).toInt(), (y + keyH).toInt())
+                // Store bounds with padding applied (actual tappable area)
+                val rect = Rect(
+                    (x2 + keyPadding).toInt(), 
+                    (y + keyPadding).toInt(), 
+                    (x2 + kw.toFloat() - keyPadding).toInt(), 
+                    (y + keyHeightPx - keyPadding).toInt()
+                )
                 keyBounds[key] = rect
 
                 val bgColor = if (key.isModifier) theme.keyModifierBackground else theme.keyBackground
                 val bgPaint = if (key.isModifier) keyModifierBgPaint else keyBgPaint
                 bgPaint.color = bgColor
+                
+                // Draw key background with slight padding for spacing
                 canvas.drawRect(
-                    x2, y, x2 + kw.toFloat(), y + keyH,
+                    x2 + keyPadding, y + keyPadding, x2 + kw.toFloat() - keyPadding, y + keyHeightPx - keyPadding,
                     bgPaint
                 )
+                
+                // Draw key outline (subtle border)
+                keyOutline.color = theme.keyAccent
+                keyOutline.alpha = (0.2f * 255).toInt()
+                canvas.drawRect(
+                    x2 + keyPadding, y + keyPadding, x2 + kw.toFloat() - keyPadding, y + keyHeightPx - keyPadding,
+                    keyOutline
+                )
+                
                 if (shiftActive && key.code == KC.SHIFT) {
                     canvas.drawRect(
-                        x2 + 2, y + 2, x2 + kw.toFloat() - 2, y + keyH - 2,
+                        x2 + 2, y + 2, x2 + kw.toFloat() - 2, y + keyHeightPx - 2,
                         shiftHighlightPaint
                     )
                 }
-                canvas.drawText(
-                    key.label, x2 + kw.toFloat() / 2, y + keyH * 0.6f,
-                    textPaint
-                )
+                
+                // Draw key text (centered both horizontally and vertically)
+                val textX = x2 + kw.toFloat() / 2
+                val textY = y + (keyHeightPx / 2) + (6f * density) // baseline adjustment
+                
+                // Convert to uppercase if shift is active and key is a letter
+                val displayLabel = if (shiftActive && key.label.length == 1 && key.label[0].isLetter()) {
+                    key.label.uppercase()
+                } else {
+                    key.label
+                }
+                
+                canvas.drawText(displayLabel, textX, textY, textPaint)
                 x2 += kw.toFloat()
             }
-            y += keyH
+            y += keyHeightPx + rowSpacingPx
         }
 
         // Draw glide trail with fade gradient (skip if reduced motion enabled)
@@ -220,7 +279,7 @@ class KeyboardView(
                     continue
                 }
                 
-                val radius = 2f + (48f * progress * resources.displayMetrics.density)
+                val radius = (2f + (48f * progress)) * density
                 val alpha = ((1f - progress) * 255).toInt()
                 ripplePaint.color = theme.keyAccent
                 ripplePaint.alpha = alpha
@@ -316,7 +375,12 @@ class KeyboardView(
     private fun sampleAt(x: Float, y: Float): GlideDecoder.Sample {
         for ((key, rect) in keyBounds) {
             if (rect.contains(x.toInt(), y.toInt())) {
-                return GlideDecoder.Sample(key.label[0], x, y)
+                // Use the actual label character, respecting shift state for letters
+                var char = key.label[0]
+                if (shiftActive && char.isLetter()) {
+                    char = char.uppercaseChar()
+                }
+                return GlideDecoder.Sample(char, x, y)
             }
         }
         return GlideDecoder.Sample(' ', x, y)
@@ -342,6 +406,19 @@ class KeyboardView(
 
     fun updateLayout(layout: KeyLayout) {
         keyLayout = layout
+        // Recompute effective layout with number row if enabled
+        effectiveLayout = if (settings.numberRow) {
+            val numberRow = (1..10).map { i ->
+                val ch = if (i == 10) '0' else (i + 48).toChar()
+                Key(ch.toString(), ch.code)
+            }
+            KeyLayout(
+                layout.id + "_with_numbers",
+                listOf(numberRow) + layout.rows
+            )
+        } else {
+            layout
+        }
         invalidate()
     }
 }

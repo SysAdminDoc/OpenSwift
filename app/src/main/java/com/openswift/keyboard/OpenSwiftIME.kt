@@ -91,7 +91,7 @@ class OpenSwiftIME : InputMethodService() {
         clipboard.captureSystem(this)
         currentWord.clear()
         previousWord = ""
-        shiftActive = false
+        shiftActive = settings.autoCapitalize // Start with shift active if auto-capitalize is on
         symbolsActive = false
         emojiMode = false
         clipboardMode = false
