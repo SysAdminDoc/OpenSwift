@@ -63,7 +63,9 @@ Output: `app/build/outputs/apk/release/app-release.apk`
 - **[SETUP.md](SETUP.md)** — Installation, first use, common tasks, troubleshooting
 - **[GUIDE.md](GUIDE.md)** — Power-user reference (glide tips, snippets, custom themes, accents)
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — For developers (dev setup, architecture, contributing features)
-- **[ROADMAP.md](ROADMAP.md)** — Planned features (v0.2–v1.0) and future ideas
+- **[ROADMAP.md](ROADMAP.md)** — Active roadmap (v0.4+)
+- **[COMPLETED.md](COMPLETED.md)** — Shipped roadmap summary
+- **[RESEARCH_REPORT.md](RESEARCH_REPORT.md)** — Research and dependency-analysis summary
 - **[EXAMPLES.md](EXAMPLES.md)** — Snippet packs, theme palettes, per-app configs, accessibility setup
 
 ## Settings
@@ -129,15 +131,13 @@ Applied on space/enter:
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md) for detailed v0.2, v0.3, v0.4, v1.0 milestones.
+See [ROADMAP.md](ROADMAP.md) for the current v0.4+ plan.
 
-**v0.2 (Next)**: UI polish (ripple effects, animated suggestions), clipboard panel, number row toggle, onboarding wizard
+**v0.4 (Next)**: Multilingual foundation, dictionary portability, emoji categories/search, per-app prediction profiles
 
-**v0.3**: Multilingual support (German, French, Spanish), advanced input methods, language detection
+**v0.5**: Optional encrypted sync, plugin framework hardening, optional on-device ML prediction
 
-**v0.4**: Cloud sync (optional), plugin system, custom input engines
-
-**v1.0**: Stable release, performance optimization, expanded emoji pack
+**v1.0**: Stable release, expanded language support, performance audit, extension API stability
 
 ## Contributing
 

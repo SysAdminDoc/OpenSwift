@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Consolidated planning docs: active work now lives in `ROADMAP.md`, shipped work in `COMPLETED.md`, research summary in `RESEARCH_REPORT.md`, and historical v0.2/dependency-analysis docs under `docs/archive/`.
+
 ## v0.3.0 — 2026-05-04 (Accessibility & Privacy)
 
 ### Added
