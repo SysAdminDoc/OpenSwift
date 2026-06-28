@@ -8,9 +8,10 @@ import org.json.JSONObject
  * map of (prevWord -> nextWord -> count) so the IME can do better next-word prediction
  * over time. Stored as JSON in SharedPreferences (small enough for normal usage).
  */
-class UserDictionary(ctx: Context) {
+class UserDictionary(ctx: Context, languageCode: String = "en") {
 
-    private val prefs = ctx.getSharedPreferences("user_dict", Context.MODE_PRIVATE)
+    private val prefsName = if (languageCode == "en") "user_dict" else "user_dict_$languageCode"
+    private val prefs = ctx.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
     private val unigram: HashMap<String, Int> = HashMap()
     private val bigram: HashMap<String, HashMap<String, Int>> = HashMap()
 

@@ -1,6 +1,6 @@
 # OpenSwift
 
-[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
+[![Version](https://img.shields.io/badge/version-0.3.1-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
 
@@ -12,6 +12,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Animated Feedback** — Ripple effect on key tap, gradient fade on glide trail (v0.2+)
 - **Suggestion Pills** — Rounded pill-shaped suggestions with preview text (v0.2+)
 - **Word Prediction** — Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
+- **Multilingual Dictionaries** — English, German, French, and Spanish word lists with language-specific layout defaults
 - **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
 - **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
@@ -34,9 +35,9 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - `KeyboardView` — Custom View rendering keys, suggestions, and glide trail detection
 - `Predictor` — Scoring engine for next-word and auto-correct suggestions
 - `GlideDecoder` — Polyline-to-word decoding using anchored key subsequence matching
-- `WordList` + `UserDictionary` — Frequency-based word store + per-user bigram learning
+- `WordList` + `UserDictionary` — Frequency-based per-language word stores + per-user bigram learning
 - `Settings` + `ClipboardHistory` — Persistent user preferences and clipboard state
-- `Themes` + `Layouts` — 6 built-in themes and 3 keyboard layouts
+- `Themes` + `Layouts` — 10 built-in themes and 3 keyboard layouts with language defaults
 
 ## Building
 
@@ -45,6 +46,12 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 ```
 
 Output: `app/build/outputs/apk/release/app-release.apk`
+
+Run local checks:
+
+```bash
+./gradlew testDebugUnitTest
+```
 
 ## Installation
 
@@ -56,21 +63,14 @@ Output: `app/build/outputs/apk/release/app-release.apk`
 6. Set **OpenSwift** as default input method
 7. Open any text field and start typing!
 
-**See [SETUP.md](SETUP.md) for detailed setup, first-use tips, and troubleshooting.**
-
 ## Documentation
 
-- **[SETUP.md](SETUP.md)** — Installation, first use, common tasks, troubleshooting
-- **[GUIDE.md](GUIDE.md)** — Power-user reference (glide tips, snippets, custom themes, accents)
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — For developers (dev setup, architecture, contributing features)
-- **[ROADMAP.md](ROADMAP.md)** — Active roadmap (v0.4+)
-- **[COMPLETED.md](COMPLETED.md)** — Shipped roadmap summary
-- **[RESEARCH_REPORT.md](RESEARCH_REPORT.md)** — Research and dependency-analysis summary
-- **[EXAMPLES.md](EXAMPLES.md)** — Snippet packs, theme palettes, per-app configs, accessibility setup
+Public setup, usage, architecture, and contribution notes are consolidated in this README. Local planning notes are kept in ignored working-tree files so the GitHub README remains the canonical public document.
 
 ## Settings
 
-- **Theme** — 6 built-in themes + custom theme editor
+- **Language** — English, German, French, or Spanish with matching default keyboard layout
+- **Theme** — 10 built-in themes + custom theme editor
 - **Keyboard Layout** — QWERTY, QWERTZ, AZERTY
 - **Glide Typing** — Enable/disable swipe-to-type
 - **Auto-Correct** — Toggle fuzzy correction
@@ -97,6 +97,13 @@ For the current incomplete word:
 - Fuzzy match (Damerau-Levenshtein ≤ edit budget)
 - Frequency weighting: log10(frequency + user-count + 1)
 - Bigram boost: +1.5× if word likely follows previous word (user learns)
+
+### Multilingual Input
+Manual language selection switches the active offline dictionary and learned-word store:
+- English uses QWERTY by default
+- German uses QWERTZ by default
+- French uses AZERTY by default
+- Spanish uses QWERTY by default
 
 ### Auto-Correct
 Applied on space/enter:
@@ -131,9 +138,7 @@ Applied on space/enter:
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md) for the current v0.4+ plan.
-
-**v0.4 (Next)**: Multilingual foundation, dictionary portability, emoji categories/search, per-app prediction profiles
+**v0.4 (Next)**: Language detection, dictionary portability, emoji categories/search, per-app prediction profiles
 
 **v0.5**: Optional encrypted sync, plugin framework hardening, optional on-device ML prediction
 
@@ -141,11 +146,7 @@ See [ROADMAP.md](ROADMAP.md) for the current v0.4+ plan.
 
 ## Contributing
 
-OpenSwift is open to community contributions. See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- Development setup
-- Code style guidelines
-- How to add new features (example: adding a Dvorak layout)
-- Pull request workflow
+OpenSwift is open to community contributions. Start with the build and architecture sections above, keep changes local-first and privacy-preserving, and verify with Gradle before submitting patches.
 
 **Ideas for contributions:**
 - New keyboard layouts (Dvorak, Colemak, Bépo, etc.)

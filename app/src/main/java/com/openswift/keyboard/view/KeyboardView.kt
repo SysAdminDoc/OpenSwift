@@ -8,9 +8,9 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import com.openswift.keyboard.data.Settings
-import com.openswift.keyboard.engine.Predictor
 import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.engine.GlideDecoder
+import com.openswift.keyboard.engine.WordList
 import com.openswift.keyboard.layout.Key
 import com.openswift.keyboard.layout.KeyLayout
 import com.openswift.keyboard.layout.KeyCode as KC
@@ -19,8 +19,8 @@ import com.openswift.keyboard.theme.Themes
 class KeyboardView(
     ctx: Context,
     private val settings: Settings,
-    private val predictor: Predictor,
-    private val userDict: UserDictionary,
+    private var wordList: WordList,
+    private var userDict: UserDictionary,
     private var keyLayout: KeyLayout,
     attrs: AttributeSet? = null,
     defStyle: Int = 0
@@ -30,8 +30,7 @@ class KeyboardView(
     private var onGlideListener: ((String) -> Unit)? = null
     private var suggestions: List<String> = emptyList()
     private var shiftActive = false
-    private val wordList = com.openswift.keyboard.engine.WordList(ctx)
-    private val glideDecoder = GlideDecoder(wordList, userDict)
+    private var glideDecoder = GlideDecoder(wordList, userDict)
     
     // Compute layout with number row if enabled
     private var effectiveLayout: KeyLayout = if (settings.numberRow) {
@@ -420,5 +419,11 @@ class KeyboardView(
             layout
         }
         invalidate()
+    }
+
+    fun updateDictionary(wordList: WordList, userDict: UserDictionary) {
+        this.wordList = wordList
+        this.userDict = userDict
+        glideDecoder = GlideDecoder(wordList, userDict)
     }
 }

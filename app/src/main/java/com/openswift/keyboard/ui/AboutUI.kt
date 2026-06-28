@@ -50,7 +50,7 @@ fun AboutUI(
         )
         
         Text(
-            "v0.3.0",
+            "v0.3.1",
             style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f)
         )
@@ -117,6 +117,7 @@ fun AboutUI(
                     "Glide typing with smart gesture detection",
                     "10 beautiful color themes including accessibility modes",
                     "Animated ripple & glide trail effects",
+                    "English, German, French, and Spanish dictionaries",
                     "Emoji keyboard with quick access",
                     "Smart predictions & auto-correct",
                     "Privacy dashboard & clipboard management",
@@ -163,7 +164,7 @@ fun AboutUI(
             
             LinkButton(
                 label = "View Documentation",
-                url = "https://github.com/SysAdminDoc/OpenSwift/blob/master/GUIDE.md",
+                url = "https://github.com/SysAdminDoc/OpenSwift#readme",
                 accentColor = accentColor,
                 context = context
             )

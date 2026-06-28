@@ -21,6 +21,18 @@ class Settings(ctx: Context) {
         get() = prefs.getString("layout", "qwerty")!!
         set(v) { prefs.edit().putString("layout", v).apply() }
 
+    var language: String
+        get() = KeyboardLanguages.byCode(prefs.getString("language", KeyboardLanguages.English.code)).code
+        set(v) {
+            val language = KeyboardLanguages.byCode(v)
+            val current = prefs.getString("language", KeyboardLanguages.English.code)
+            val editor = prefs.edit().putString("language", language.code)
+            if (current != language.code) {
+                editor.putString("layout", language.layoutId)
+            }
+            editor.apply()
+        }
+
     var glideEnabled: Boolean
         get() = prefs.getBoolean("glide", true)
         set(v) { prefs.edit().putBoolean("glide", v).apply() }

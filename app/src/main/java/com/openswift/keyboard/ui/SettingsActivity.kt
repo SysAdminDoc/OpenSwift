@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.unit.dp
+import com.openswift.keyboard.data.KeyboardLanguages
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.SnippetManager
 import com.openswift.keyboard.theme.Themes
@@ -95,6 +96,9 @@ fun SettingsUI(
 
 @Composable
 fun KeyboardSettingsTab(settings: Settings, textColor: ComposeColor, accentColor: ComposeColor) {
+    var language by remember { mutableStateOf(settings.language) }
+    var layout by remember { mutableStateOf(settings.layout) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth(),
@@ -106,9 +110,22 @@ fun KeyboardSettingsTab(settings: Settings, textColor: ComposeColor, accentColor
             color = textColor
         )
 
+        SettingsGroup(title = "Language") {
+            KeyboardLanguages.all.forEach { option ->
+                ToggleOption(option.name, language == option.code, textColor, accentColor) {
+                    settings.language = option.code
+                    language = settings.language
+                    layout = settings.layout
+                }
+            }
+        }
+
         SettingsGroup(title = "Layout") {
             listOf("qwerty" to "QWERTY", "qwertz" to "QWERTZ", "azerty" to "AZERTY").forEach { (id, label) ->
-                ToggleOption(label, settings.layout == id, textColor, accentColor) { settings.layout = id }
+                ToggleOption(label, layout == id, textColor, accentColor) {
+                    settings.layout = id
+                    layout = id
+                }
             }
         }
 

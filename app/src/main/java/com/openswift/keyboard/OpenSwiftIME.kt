@@ -4,16 +4,16 @@ import android.inputmethodservice.InputMethodService
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputConnection
+import android.view.inputmethod.InputMethodSubtype
 import android.os.Vibrator
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
+import com.openswift.keyboard.data.KeyboardLanguages
 import com.openswift.keyboard.engine.WordList
 import com.openswift.keyboard.engine.UserDictionary
-import com.openswift.keyboard.engine.Predictor
+import com.openswift.keyboard.engine.MultilingualPredictor
 import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.layout.Layouts
-import com.openswift.keyboard.theme.Themes
 import com.openswift.keyboard.view.KeyboardView
 import com.openswift.keyboard.ui.EmojiView
 
@@ -23,7 +23,7 @@ class OpenSwiftIME : InputMethodService() {
     private lateinit var clipboard: ClipboardHistory
     private lateinit var wordList: WordList
     private lateinit var userDict: UserDictionary
-    private lateinit var predictor: Predictor
+    private lateinit var predictor: MultilingualPredictor
     private lateinit var snippets: com.openswift.keyboard.data.SnippetManager
     private lateinit var keyboardView: KeyboardView
     private lateinit var emojiView: EmojiView
@@ -39,21 +39,22 @@ class OpenSwiftIME : InputMethodService() {
     private var numberRowShown = false
     private var previousWord = ""
     private var currentWord = StringBuilder()
+    private var activeLanguageCode = KeyboardLanguages.English.code
 
     override fun onCreate() {
         super.onCreate()
         settings = Settings(this)
         clipboard = ClipboardHistory(this)
-        wordList = WordList(this)
-        userDict = UserDictionary(this)
-        predictor = Predictor(wordList, userDict)
+        predictor = MultilingualPredictor(this)
+        refreshLanguageState()
         snippets = com.openswift.keyboard.data.SnippetManager(this)
         vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
     }
 
     override fun onCreateInputView(): View {
+        refreshLanguageState()
         currentLayout = Layouts.byId(settings.layout)
-        keyboardView = KeyboardView(this, settings, predictor, userDict, currentLayout)
+        keyboardView = KeyboardView(this, settings, wordList, userDict, currentLayout)
         keyboardView.setOnKeyListener { code, label ->
             onKeyPressed(code, label)
         }
@@ -88,6 +89,7 @@ class OpenSwiftIME : InputMethodService() {
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        refreshLanguageState()
         clipboard.captureSystem(this)
         currentWord.clear()
         previousWord = ""
@@ -106,7 +108,7 @@ class OpenSwiftIME : InputMethodService() {
                 if (currentWord.isEmpty()) {
                     ic.commitText(" ", 1)
                 } else {
-                    val corrected = predictor.autoCorrect(currentWord.toString(), previousWord)
+                    val corrected = predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
                     commitWord(corrected)
                     previousWord = corrected
                     ic.commitText(" ", 1)
@@ -117,7 +119,7 @@ class OpenSwiftIME : InputMethodService() {
             }
             KC.ENTER -> {
                 if (currentWord.isNotEmpty()) {
-                    val corrected = predictor.autoCorrect(currentWord.toString(), previousWord)
+                    val corrected = predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
                     userDict.learn(previousWord.ifEmpty { null }, corrected)
                     previousWord = corrected
                 }
@@ -215,8 +217,34 @@ class OpenSwiftIME : InputMethodService() {
     }
 
     private fun updateSuggestions() {
-        val sugg = predictor.suggest(currentWord.toString(), previousWord, limit = 3)
+        val sugg = predictor.suggest(activeLanguageCode, currentWord.toString(), previousWord, limit = 3)
         keyboardView.setSuggestions(sugg)
+    }
+
+    override fun onCurrentInputMethodSubtypeChanged(newSubtype: InputMethodSubtype?) {
+        super.onCurrentInputMethodSubtypeChanged(newSubtype)
+        val locale = newSubtype?.languageTag?.takeIf { it.isNotBlank() } ?: newSubtype?.locale
+        if (!locale.isNullOrBlank()) {
+            settings.language = KeyboardLanguages.byLocale(locale).code
+            refreshLanguageState()
+        }
+    }
+
+    private fun refreshLanguageState() {
+        val language = KeyboardLanguages.byCode(settings.language)
+        activeLanguageCode = language.code
+        wordList = predictor.wordList(language.code)
+        userDict = predictor.userDictionary(language.code)
+        if (!symbolsActive) {
+            currentLayout = Layouts.byId(settings.layout)
+        }
+        if (::keyboardView.isInitialized) {
+            keyboardView.updateDictionary(wordList, userDict)
+            if (!symbolsActive) {
+                keyboardView.updateLayout(currentLayout)
+            }
+            updateSuggestions()
+        }
     }
 
     private fun showEmojiView() {

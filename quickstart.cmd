@@ -56,4 +56,4 @@ echo.
 echo For release build:
 echo   gradlew.bat assembleRelease
 echo.
-echo For more info, see CONTRIBUTING.md
+echo For more info, see README.md

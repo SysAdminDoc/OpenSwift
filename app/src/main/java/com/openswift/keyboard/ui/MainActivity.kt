@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
+import com.openswift.keyboard.data.KeyboardLanguages
 import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.theme.Themes
 
@@ -59,7 +60,7 @@ fun MainUI(settings: Settings, context: android.content.Context) {
                 1 -> EnhancedSettingsUI(settings, bgColor, textColor, accentColor)
                 2 -> PrivacyUI(
                     ClipboardHistory(context),
-                    UserDictionary(context),
+                    UserDictionary(context, settings.language),
                     bgColor,
                     textColor,
                     accentColor
@@ -155,6 +156,7 @@ fun EnhancedSettingsUI(settings: Settings, bgColor: Color, textColor: Color, acc
         ) {
             SettingsList(
                 listOf(
+                    "Language" to KeyboardLanguages.all.map { it.code to it.name },
                     "Layout" to listOf("qwerty" to "QWERTY", "qwertz" to "QWERTZ", "azerty" to "AZERTY"),
                     "Height" to emptyList()
                 ),
@@ -245,6 +247,9 @@ fun SettingsList(
     textColor: Color,
     accentColor: Color
 ) {
+    var selectedLanguage by remember { mutableStateOf(settings.language) }
+    var selectedLayout by remember { mutableStateOf(settings.layout) }
+
     items.forEach { (label, options) ->
         if (options.isNotEmpty()) {
             Text(label, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -256,8 +261,24 @@ fun SettingsList(
                 ) {
                     Text(name, color = textColor)
                     RadioButton(
-                        selected = if (label == "Layout") settings.layout == id else false,
-                        onClick = { if (label == "Layout") settings.layout = id },
+                        selected = when (label) {
+                            "Language" -> selectedLanguage == id
+                            "Layout" -> selectedLayout == id
+                            else -> false
+                        },
+                        onClick = {
+                            when (label) {
+                                "Language" -> {
+                                    settings.language = id
+                                    selectedLanguage = settings.language
+                                    selectedLayout = settings.layout
+                                }
+                                "Layout" -> {
+                                    settings.layout = id
+                                    selectedLayout = id
+                                }
+                            }
+                        },
                         colors = RadioButtonDefaults.colors(selectedColor = accentColor)
                     )
                 }

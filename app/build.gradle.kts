@@ -12,8 +12,8 @@ android {
         applicationId = "com.openswift.keyboard"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.3.1"
     }
 
     signingConfigs {
@@ -64,4 +64,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    compileOnly("com.google.errorprone:error_prone_annotations:2.50.0")
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    testImplementation("junit:junit:4.13.2")
 }

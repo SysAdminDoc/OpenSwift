@@ -4,20 +4,22 @@ import android.content.Context
 import com.openswift.keyboard.R
 
 /** Loads the static word frequency list shipped with the app and a per-user dictionary. */
-class WordList(ctx: Context) {
+class WordList(ctx: Context, wordListRes: Int = R.raw.words) {
 
     val frequencies: Map<String, Int>
     val words: List<String>
 
     init {
         val freq = HashMap<String, Int>(8192)
-        ctx.resources.openRawResource(R.raw.words).bufferedReader().useLines { lines ->
+        ctx.resources.openRawResource(wordListRes).bufferedReader().useLines { lines ->
             lines.forEach { line ->
                 val parts = line.split('\t', limit = 2)
                 if (parts.size == 2) {
-                    val w = parts[0]
+                    val w = parts[0].trim().lowercase()
                     val f = parts[1].toIntOrNull() ?: 1
-                    freq[w] = f
+                    if (w.isNotEmpty()) {
+                        freq[w] = f
+                    }
                 }
             }
         }
