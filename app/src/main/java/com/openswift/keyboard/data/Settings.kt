@@ -41,6 +41,10 @@ class Settings(ctx: Context) {
         get() = prefs.getBoolean("autocorrect", true)
         set(v) { prefs.edit().putBoolean("autocorrect", v).apply() }
 
+    var languageDetection: Boolean
+        get() = prefs.getBoolean("language_detection", true)
+        set(v) { prefs.edit().putBoolean("language_detection", v).apply() }
+
     var autoCapitalize: Boolean
         get() = prefs.getBoolean("autocap", true)
         set(v) { prefs.edit().putBoolean("autocap", v).apply() }

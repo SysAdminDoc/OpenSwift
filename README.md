@@ -1,6 +1,6 @@
 # OpenSwift
 
-[![Version](https://img.shields.io/badge/version-0.3.1-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
+[![Version](https://img.shields.io/badge/version-0.3.2-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
 
@@ -13,6 +13,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Suggestion Pills** — Rounded pill-shaped suggestions with preview text (v0.2+)
 - **Word Prediction** — Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
 - **Multilingual Dictionaries** — English, German, French, and Spanish word lists with language-specific layout defaults
+- **Offline Language Detection** — Current/recent input can switch suggestion dictionaries without network calls
 - **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
 - **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
@@ -70,6 +71,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 ## Settings
 
 - **Language** — English, German, French, or Spanish with matching default keyboard layout
+- **Detect Language** — Local context scoring can switch prediction language automatically
 - **Theme** — 10 built-in themes + custom theme editor
 - **Keyboard Layout** — QWERTY, QWERTZ, AZERTY
 - **Glide Typing** — Enable/disable swipe-to-type
@@ -105,6 +107,8 @@ Manual language selection switches the active offline dictionary and learned-wor
 - French uses AZERTY by default
 - Spanish uses QWERTY by default
 
+When language detection is enabled, OpenSwift scores the current word and recent local context against bundled dictionaries and accent hints. No typed text is sent off-device.
+
 ### Auto-Correct
 Applied on space/enter:
 - If word length ≥ 3 and not in dictionary, find closest match
@@ -138,7 +142,7 @@ Applied on space/enter:
 
 ## Roadmap
 
-**v0.4 (Next)**: Language detection, dictionary portability, emoji categories/search, per-app prediction profiles
+**v0.4 (Next)**: Dictionary portability, emoji categories/search, per-app prediction profiles
 
 **v0.5**: Optional encrypted sync, plugin framework hardening, optional on-device ML prediction
 

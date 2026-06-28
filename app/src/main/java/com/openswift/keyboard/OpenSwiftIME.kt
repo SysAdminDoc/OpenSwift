@@ -12,6 +12,7 @@ import com.openswift.keyboard.data.KeyboardLanguages
 import com.openswift.keyboard.engine.WordList
 import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.engine.MultilingualPredictor
+import com.openswift.keyboard.engine.LanguageDetector
 import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.layout.Layouts
 import com.openswift.keyboard.view.KeyboardView
@@ -24,6 +25,7 @@ class OpenSwiftIME : InputMethodService() {
     private lateinit var wordList: WordList
     private lateinit var userDict: UserDictionary
     private lateinit var predictor: MultilingualPredictor
+    private lateinit var languageDetector: LanguageDetector
     private lateinit var snippets: com.openswift.keyboard.data.SnippetManager
     private lateinit var keyboardView: KeyboardView
     private lateinit var emojiView: EmojiView
@@ -40,12 +42,17 @@ class OpenSwiftIME : InputMethodService() {
     private var previousWord = ""
     private var currentWord = StringBuilder()
     private var activeLanguageCode = KeyboardLanguages.English.code
+    private val languageContext = ArrayDeque<String>()
+    private var refreshingLanguage = false
 
     override fun onCreate() {
         super.onCreate()
         settings = Settings(this)
         clipboard = ClipboardHistory(this)
         predictor = MultilingualPredictor(this)
+        languageDetector = LanguageDetector(predictor.supportedLanguages()) { language, word ->
+            predictor.frequency(language, word)
+        }
         refreshLanguageState()
         snippets = com.openswift.keyboard.data.SnippetManager(this)
         vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
@@ -92,6 +99,7 @@ class OpenSwiftIME : InputMethodService() {
         refreshLanguageState()
         clipboard.captureSystem(this)
         currentWord.clear()
+        languageContext.clear()
         previousWord = ""
         shiftActive = settings.autoCapitalize // Start with shift active if auto-capitalize is on
         symbolsActive = false
@@ -108,6 +116,7 @@ class OpenSwiftIME : InputMethodService() {
                 if (currentWord.isEmpty()) {
                     ic.commitText(" ", 1)
                 } else {
+                    detectLanguageForCurrentContext(currentWord.toString())
                     val corrected = predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
                     commitWord(corrected)
                     previousWord = corrected
@@ -119,8 +128,10 @@ class OpenSwiftIME : InputMethodService() {
             }
             KC.ENTER -> {
                 if (currentWord.isNotEmpty()) {
+                    detectLanguageForCurrentContext(currentWord.toString())
                     val corrected = predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
                     userDict.learn(previousWord.ifEmpty { null }, corrected)
+                    rememberLanguageToken(corrected)
                     previousWord = corrected
                 }
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
@@ -203,6 +214,7 @@ class OpenSwiftIME : InputMethodService() {
     private fun commitWord(word: String) {
         val ic = currentInputConnection ?: return
         userDict.learn(previousWord.ifEmpty { null }, word)
+        rememberLanguageToken(word)
         val text = if (shiftActive && currentWord.isNotEmpty()) word.replaceFirstChar { it.uppercase() } else word
         ic.commitText(text, 1)
         currentWord.clear()
@@ -217,6 +229,9 @@ class OpenSwiftIME : InputMethodService() {
     }
 
     private fun updateSuggestions() {
+        if (!refreshingLanguage) {
+            detectLanguageForCurrentContext(currentWord.toString())
+        }
         val sugg = predictor.suggest(activeLanguageCode, currentWord.toString(), previousWord, limit = 3)
         keyboardView.setSuggestions(sugg)
     }
@@ -231,6 +246,7 @@ class OpenSwiftIME : InputMethodService() {
     }
 
     private fun refreshLanguageState() {
+        refreshingLanguage = true
         val language = KeyboardLanguages.byCode(settings.language)
         activeLanguageCode = language.code
         wordList = predictor.wordList(language.code)
@@ -244,6 +260,24 @@ class OpenSwiftIME : InputMethodService() {
                 keyboardView.updateLayout(currentLayout)
             }
             updateSuggestions()
+        }
+        refreshingLanguage = false
+    }
+
+    private fun detectLanguageForCurrentContext(currentToken: String) {
+        if (!settings.languageDetection) return
+        val tokens = languageContext + listOf(currentToken)
+        val detected = languageDetector.detect(tokens, activeLanguageCode) ?: return
+        settings.language = detected.languageCode
+        refreshLanguageState()
+    }
+
+    private fun rememberLanguageToken(word: String) {
+        val token = word.lowercase().filter { it.isLetter() || it == '¡' || it == '¿' }
+        if (token.length < 2) return
+        languageContext.addLast(token)
+        while (languageContext.size > LANGUAGE_CONTEXT_LIMIT) {
+            languageContext.removeFirst()
         }
     }
 
@@ -263,9 +297,15 @@ class OpenSwiftIME : InputMethodService() {
     override fun onFinishInput() {
         super.onFinishInput()
         if (currentWord.isNotEmpty()) {
+            detectLanguageForCurrentContext(currentWord.toString())
             userDict.learn(previousWord.ifEmpty { null }, currentWord.toString())
+            rememberLanguageToken(currentWord.toString())
             userDict.save()
         }
+    }
+
+    companion object {
+        private const val LANGUAGE_CONTEXT_LIMIT = 8
     }
 }
 

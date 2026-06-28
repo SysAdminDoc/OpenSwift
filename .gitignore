@@ -4,6 +4,7 @@
 *.jks
 *.p12
 .gradle/
+.kotlin/
 .idea/
 build/
 *.iml

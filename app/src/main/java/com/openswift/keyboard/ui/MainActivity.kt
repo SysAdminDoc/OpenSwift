@@ -174,6 +174,7 @@ fun EnhancedSettingsUI(settings: Settings, bgColor: Color, textColor: Color, acc
         ) {
             ToggleOption("Glide Typing", settings.glideEnabled) { settings.glideEnabled = it }
             ToggleOption("Auto-Correct", settings.autoCorrect) { settings.autoCorrect = it }
+            ToggleOption("Detect Language", settings.languageDetection) { settings.languageDetection = it }
             ToggleOption("Auto-Capitalize", settings.autoCapitalize) { settings.autoCapitalize = it }
         }
 

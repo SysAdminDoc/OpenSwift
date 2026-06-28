@@ -132,6 +132,7 @@ fun KeyboardSettingsTab(settings: Settings, textColor: ComposeColor, accentColor
         SettingsGroup(title = "Features") {
             var glide by remember { mutableStateOf(settings.glideEnabled) }
             var correct by remember { mutableStateOf(settings.autoCorrect) }
+            var languageDetection by remember { mutableStateOf(settings.languageDetection) }
             var cap by remember { mutableStateOf(settings.autoCapitalize) }
             var haptic by remember { mutableStateOf(settings.hapticFeedback) }
             var sound by remember { mutableStateOf(settings.soundFeedback) }
@@ -139,6 +140,7 @@ fun KeyboardSettingsTab(settings: Settings, textColor: ComposeColor, accentColor
 
             SwitchOption("Glide Typing", glide, textColor, accentColor) { glide = it; settings.glideEnabled = it }
             SwitchOption("Auto-Correct", correct, textColor, accentColor) { correct = it; settings.autoCorrect = it }
+            SwitchOption("Detect Language", languageDetection, textColor, accentColor) { languageDetection = it; settings.languageDetection = it }
             SwitchOption("Auto-Capitalize", cap, textColor, accentColor) { cap = it; settings.autoCapitalize = it }
             SwitchOption("Haptic Feedback", haptic, textColor, accentColor) { haptic = it; settings.hapticFeedback = it }
             SwitchOption("Sound Feedback", sound, textColor, accentColor) { sound = it; settings.soundFeedback = it }

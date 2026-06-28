@@ -28,6 +28,8 @@ class MultilingualPredictor(private val ctx: Context) {
 
     fun wordList(lang: String): WordList = entryFor(lang).wordList
 
+    fun frequency(lang: String, word: String): Int = entryFor(lang).wordList.frequency(word)
+
     fun userDictionary(lang: String): UserDictionary = entryFor(lang).userDictionary
 
     fun supportedLanguages(): List<KeyboardLanguage> = KeyboardLanguages.all
