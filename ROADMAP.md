@@ -3,7 +3,7 @@
 Active roadmap for forward-looking work. Completed work lives in git history
 and `CHANGELOG.md`; research/dependency findings live in `RESEARCH.md`.
 
-Current release line: v0.3.2. Last consolidated: 2026-06-28.
+Current release line: v0.3.3. Last consolidated: 2026-06-28.
 
 ## Current State
 
@@ -15,6 +15,7 @@ Current release line: v0.3.2. Last consolidated: 2026-06-28.
 - v0.3.1 shipped manually selectable English, German, French, and Spanish
   dictionaries with language-specific layout defaults.
 - v0.3.2 shipped offline language detection for current/recent input context.
+- v0.3.3 shipped emoji categories, recents, favorites, and keyword search.
 - The previous v0.2 task/decomposition package is archived under
   [docs/archive/roadmap](docs/archive/roadmap/).
 
@@ -22,7 +23,6 @@ Current release line: v0.3.2. Last consolidated: 2026-06-28.
 
 | Priority | Milestone | Work | Exit criteria |
 |---|---|---|---|
-| P0 | v0.4 | Emoji expansion | Emoji picker supports categories, recents, favorites, and search without first-open lag. |
 | P1 | v0.4 | User dictionary portability | Export/import learned words, snippets, and custom themes with clear overwrite/merge behavior. |
 | P1 | v0.4 | Per-app prediction profiles | Existing per-app settings extend to prediction/glide behavior with a visible reset path. |
 | P1 | v0.4 | Custom layout/theme package format | JSON or ZIP package format documented with validation and import errors that users can understand. |

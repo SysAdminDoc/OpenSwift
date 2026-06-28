@@ -1,6 +1,6 @@
 # OpenSwift
 
-[![Version](https://img.shields.io/badge/version-0.3.2-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
+[![Version](https://img.shields.io/badge/version-0.3.3-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
 
@@ -18,7 +18,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
 - **Custom Themes** — Create and edit themes with full color customization
-- **Emoji Grid** — 60 tappable emoji (expandable in v0.4+)
+- **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
 - **Clipboard Manager** — Swipeable history of 25 recent items with delete-on-swipe
 - **Snippets/Text Expansion** — Create custom trigger→expansion pairs for instant text insertion
 - **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
@@ -81,6 +81,13 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Sound Feedback** — Optional audio cues
 - **Key Height** — Adjust keyboard size (48–72 dp)
 
+## Emoji Picker
+
+- **Categories** — Recent, favorites, smileys, hands, hearts, food, nature, travel, objects, and symbols
+- **Recents** — Selected emoji are stored locally for fast reuse
+- **Favorites** — Long-press an emoji to toggle it as a favorite
+- **Search** — Tap the search field and use the in-picker letters to filter by local keywords
+
 ## How It Works
 
 ### Glide Typing
@@ -142,7 +149,7 @@ Applied on space/enter:
 
 ## Roadmap
 
-**v0.4 (Next)**: Dictionary portability, emoji categories/search, per-app prediction profiles
+**v0.4 (Next)**: Dictionary portability, per-app prediction profiles, custom package import
 
 **v0.5**: Optional encrypted sync, plugin framework hardening, optional on-device ML prediction
 

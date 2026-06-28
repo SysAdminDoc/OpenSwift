@@ -50,7 +50,7 @@ fun AboutUI(
         )
         
         Text(
-            "v0.3.2",
+            "v0.3.3",
             style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f)
         )
@@ -119,7 +119,7 @@ fun AboutUI(
                     "Animated ripple & glide trail effects",
                     "English, German, French, and Spanish dictionaries",
                     "Offline language detection for suggestions",
-                    "Emoji keyboard with quick access",
+                    "Emoji keyboard with categories, recents, favorites, and search",
                     "Smart predictions & auto-correct",
                     "Privacy dashboard & clipboard management",
                     "Reduced motion mode for accessibility",
