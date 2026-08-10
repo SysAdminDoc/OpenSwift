@@ -1,7 +1,9 @@
 package com.openswift.keyboard.ui
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,23 +20,78 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
+import com.openswift.keyboard.data.DataPortability
 import com.openswift.keyboard.data.KeyboardLanguages
 import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.theme.Themes
 
 class MainActivity : AppCompatActivity() {
+    private var pendingImportMode = DataPortability.ImportMode.MERGE
+
+    private val exportData = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        runCatching {
+            contentResolver.openOutputStream(uri)?.use { stream ->
+                stream.writer(Charsets.UTF_8).use { it.write(DataPortability(this).exportJson()) }
+            } ?: error("Unable to open export destination")
+        }.onSuccess {
+            toast("OpenSwift data exported")
+        }.onFailure {
+            toast("Export failed: ${it.message ?: "unknown error"}")
+        }
+    }
+
+    private val importData = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        runCatching {
+            val raw = contentResolver.openInputStream(uri)?.use { stream ->
+                stream.reader(Charsets.UTF_8).readText()
+            } ?: error("Unable to open import file")
+            DataPortability(this).importJson(raw, pendingImportMode)
+        }.onSuccess {
+            toast(it.asMessage())
+        }.onFailure {
+            toast("Import failed: ${it.message ?: "unknown error"}")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val settings = Settings(this@MainActivity)
-            MainUI(settings, this@MainActivity)
+            MainUI(
+                settings = settings,
+                context = this@MainActivity,
+                onExportData = { exportData.launch("openswift-data.json") },
+                onImportMerge = {
+                    pendingImportMode = DataPortability.ImportMode.MERGE
+                    importData.launch(arrayOf("application/json", "text/json", "*/*"))
+                },
+                onImportReplace = {
+                    pendingImportMode = DataPortability.ImportMode.REPLACE
+                    importData.launch(arrayOf("application/json", "text/json", "*/*"))
+                }
+            )
         }
+    }
+
+    private fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 }
 
 @Composable
-fun MainUI(settings: Settings, context: android.content.Context) {
+fun MainUI(
+    settings: Settings,
+    context: android.content.Context,
+    onExportData: () -> Unit = {},
+    onImportMerge: () -> Unit = {},
+    onImportReplace: () -> Unit = {}
+) {
     var activeTab by remember { mutableStateOf(0) }
     
     val theme = Themes.byId(settings.theme)
@@ -57,7 +114,15 @@ fun MainUI(settings: Settings, context: android.content.Context) {
         ) {
             when (activeTab) {
                 0 -> HomeUI(theme, bgColor, keyBgColor, textColor, accentColor)
-                1 -> EnhancedSettingsUI(settings, bgColor, textColor, accentColor)
+                1 -> EnhancedSettingsUI(
+                    settings,
+                    bgColor,
+                    textColor,
+                    accentColor,
+                    onExportData,
+                    onImportMerge,
+                    onImportReplace
+                )
                 2 -> PrivacyUI(
                     ClipboardHistory(context),
                     UserDictionary(context, settings.language),
@@ -116,7 +181,15 @@ fun MainUI(settings: Settings, context: android.content.Context) {
 }
 
 @Composable
-fun EnhancedSettingsUI(settings: Settings, bgColor: Color, textColor: Color, accentColor: Color) {
+fun EnhancedSettingsUI(
+    settings: Settings,
+    bgColor: Color,
+    textColor: Color,
+    accentColor: Color,
+    onExportData: () -> Unit = {},
+    onImportMerge: () -> Unit = {},
+    onImportReplace: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -207,9 +280,59 @@ fun EnhancedSettingsUI(settings: Settings, bgColor: Color, textColor: Color, acc
             ToggleOption("Clipboard History", settings.clipboardEnabled) { settings.clipboardEnabled = it }
             ToggleOption("Per-App Tint", settings.perAppTint) { settings.perAppTint = it }
             ToggleOption("Incognito Mode", settings.incognitoMode) { settings.incognitoMode = it }
+            DataPortabilityActions(
+                accentColor = accentColor,
+                onExportData = onExportData,
+                onImportMerge = onImportMerge,
+                onImportReplace = onImportReplace
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+fun DataPortabilityActions(
+    accentColor: Color,
+    onExportData: () -> Unit,
+    onImportMerge: () -> Unit,
+    onImportReplace: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+    ) {
+        Text(
+            "Data Portability",
+            style = AppTypography.bodyMedium,
+            color = LocalContentColor.current,
+            fontWeight = FontWeight.Bold
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        ) {
+            Button(
+                onClick = onExportData,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = accentColor)
+            ) {
+                Text("Export")
+            }
+            OutlinedButton(
+                onClick = onImportMerge,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Merge")
+            }
+            OutlinedButton(
+                onClick = onImportReplace,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Replace")
+            }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 # OpenSwift
 
-[![Version](https://img.shields.io/badge/version-0.3.3-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
+[![Version](https://img.shields.io/badge/version-0.3.4-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
 
@@ -19,6 +19,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
 - **Custom Themes** — Create and edit themes with full color customization
 - **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
+- **Data Portability** — Export/import learned words, snippets, and custom themes with merge or replace behavior
 - **Clipboard Manager** — Swipeable history of 25 recent items with delete-on-swipe
 - **Snippets/Text Expansion** — Create custom trigger→expansion pairs for instant text insertion
 - **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
@@ -38,6 +39,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - `GlideDecoder` — Polyline-to-word decoding using anchored key subsequence matching
 - `WordList` + `UserDictionary` — Frequency-based per-language word stores + per-user bigram learning
 - `Settings` + `ClipboardHistory` — Persistent user preferences and clipboard state
+- `DataPortability` — Local JSON export/import for learned words, snippets, and custom themes
 - `Themes` + `Layouts` — 10 built-in themes and 3 keyboard layouts with language defaults
 
 ## Building
@@ -80,6 +82,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Haptic Feedback** — Vibration on keypress (20ms default)
 - **Sound Feedback** — Optional audio cues
 - **Key Height** — Adjust keyboard size (48–72 dp)
+- **Data Portability** — Export a JSON backup, merge imported data, or replace local learned words/snippets/custom themes
 
 ## Emoji Picker
 

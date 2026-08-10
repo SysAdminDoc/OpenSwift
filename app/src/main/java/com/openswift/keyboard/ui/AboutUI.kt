@@ -50,7 +50,7 @@ fun AboutUI(
         )
         
         Text(
-            "v0.3.3",
+            "v0.3.4",
             style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f)
         )
@@ -120,6 +120,7 @@ fun AboutUI(
                     "English, German, French, and Spanish dictionaries",
                     "Offline language detection for suggestions",
                     "Emoji keyboard with categories, recents, favorites, and search",
+                    "Export and import for learned words, snippets, and custom themes",
                     "Smart predictions & auto-correct",
                     "Privacy dashboard & clipboard management",
                     "Reduced motion mode for accessibility",
