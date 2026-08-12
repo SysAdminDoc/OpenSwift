@@ -17,12 +17,6 @@ android {
     }
 
     signingConfigs {
-        getByName("debug") {
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: layout.buildDirectory.asFile.get().absolutePath + "/debug.keystore")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
-        }
         create("release") {
             storeFile = file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "release.keystore")
             storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD") ?: ""
