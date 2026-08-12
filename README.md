@@ -28,6 +28,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Usage Analytics** — Local-only keystroke, word, and correction tracking (no data leaves device)
 - **Accessibility** — Full TalkBack support, key announcements, navigation support, reduced motion mode (v0.3+)
 - **Privacy Dashboard** — View clipboard history, dictionary stats, and delete all data (v0.3+)
+- **Sensitive-Field Privacy** — Password, private, and no-suggestions fields automatically disable prediction, glide decoding, learning, snippets, and clipboard capture
 - **Per-App Settings** — Customize behavior per application (disable glide in games, adjust key height for email, etc.)
 - **Haptic & Sound Feedback** — Customizable vibration (20ms default) and optional audio cues
 
@@ -83,6 +84,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Sound Feedback** — Optional audio cues
 - **Key Height** — Adjust keyboard size (48–72 dp)
 - **Data Portability** — Export a JSON backup, merge imported data, or replace local learned words/snippets/custom themes
+- **Incognito Mode** — Disable prediction history, learning, snippets, and clipboard capture for every field
 
 ## Emoji Picker
 
@@ -147,6 +149,7 @@ Applied on space/enter:
 - **Local-only** — All data stored in app's private SharedPreferences
 - **Open source** — MIT licensed; code is auditable
 - **No telemetry** — No analytics, no crash reporting, no ads
+- **Automatic incognito fields** — Password and app-declared private/no-suggestions editors never expose suggestions or feed local learning and clipboard history
 - **Device learns** — User bigrams and word frequencies stay on-device
 - **Clipboard history** — Cleared on uninstall
 

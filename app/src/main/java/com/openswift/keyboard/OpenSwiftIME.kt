@@ -15,6 +15,7 @@ import com.openswift.keyboard.engine.MultilingualPredictor
 import com.openswift.keyboard.engine.LanguageDetector
 import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.layout.Layouts
+import com.openswift.keyboard.privacy.InputPrivacyPolicy
 import com.openswift.keyboard.view.KeyboardView
 import com.openswift.keyboard.ui.EmojiView
 
@@ -44,6 +45,7 @@ class OpenSwiftIME : InputMethodService() {
     private var activeLanguageCode = KeyboardLanguages.English.code
     private val languageContext = ArrayDeque<String>()
     private var refreshingLanguage = false
+    private var privacyModeActive = false
 
     override fun onCreate() {
         super.onCreate()
@@ -62,6 +64,7 @@ class OpenSwiftIME : InputMethodService() {
         refreshLanguageState()
         currentLayout = Layouts.byId(settings.layout)
         keyboardView = KeyboardView(this, settings, wordList, userDict, currentLayout)
+        keyboardView.setPredictionEnabled(!privacyModeActive)
         keyboardView.setOnKeyListener { code, label ->
             onKeyPressed(code, label)
         }
@@ -96,11 +99,17 @@ class OpenSwiftIME : InputMethodService() {
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        refreshLanguageState()
-        clipboard.captureSystem(this)
+        privacyModeActive = InputPrivacyPolicy.shouldUseIncognito(info, settings.incognitoMode)
         currentWord.clear()
         languageContext.clear()
         previousWord = ""
+        refreshLanguageState()
+        if (::keyboardView.isInitialized) {
+            keyboardView.setPredictionEnabled(!privacyModeActive)
+        }
+        if (settings.clipboardEnabled && !privacyModeActive) {
+            clipboard.captureSystem(this)
+        }
         shiftActive = settings.autoCapitalize // Start with shift active if auto-capitalize is on
         symbolsActive = false
         emojiMode = false
@@ -116,10 +125,13 @@ class OpenSwiftIME : InputMethodService() {
                 if (currentWord.isEmpty()) {
                     ic.commitText(" ", 1)
                 } else {
-                    detectLanguageForCurrentContext(currentWord.toString())
-                    val corrected = predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
+                    val corrected = if (privacyModeActive) {
+                        currentWord.toString()
+                    } else {
+                        detectLanguageForCurrentContext(currentWord.toString())
+                        predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
+                    }
                     commitWord(corrected)
-                    previousWord = corrected
                     ic.commitText(" ", 1)
                     currentWord.clear()
                     updateSuggestions()
@@ -127,7 +139,7 @@ class OpenSwiftIME : InputMethodService() {
                 if (settings.autoCapitalize) requestShift(true)
             }
             KC.ENTER -> {
-                if (currentWord.isNotEmpty()) {
+                if (currentWord.isNotEmpty() && !privacyModeActive) {
                     detectLanguageForCurrentContext(currentWord.toString())
                     val corrected = predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
                     userDict.learn(previousWord.ifEmpty { null }, corrected)
@@ -190,7 +202,7 @@ class OpenSwiftIME : InputMethodService() {
                     val ch = label[0]
                     if (ch.isDigit()) {
                         // Check for snippet expansion
-                        val expanded = snippets.expand(ch.toString())
+                        val expanded = if (privacyModeActive) null else snippets.expand(ch.toString())
                         if (expanded != null) {
                             ic.commitText(expanded, 1)
                         } else {
@@ -213,12 +225,14 @@ class OpenSwiftIME : InputMethodService() {
 
     private fun commitWord(word: String) {
         val ic = currentInputConnection ?: return
-        userDict.learn(previousWord.ifEmpty { null }, word)
-        rememberLanguageToken(word)
+        if (!privacyModeActive) {
+            userDict.learn(previousWord.ifEmpty { null }, word)
+            rememberLanguageToken(word)
+        }
         val text = if (shiftActive && currentWord.isNotEmpty()) word.replaceFirstChar { it.uppercase() } else word
         ic.commitText(text, 1)
         currentWord.clear()
-        previousWord = word
+        previousWord = if (privacyModeActive) "" else word
         shiftActive = false
         keyboardView.setShift(false)
     }
@@ -229,6 +243,10 @@ class OpenSwiftIME : InputMethodService() {
     }
 
     private fun updateSuggestions() {
+        if (privacyModeActive) {
+            keyboardView.setSuggestions(emptyList())
+            return
+        }
         if (!refreshingLanguage) {
             detectLanguageForCurrentContext(currentWord.toString())
         }
@@ -286,6 +304,7 @@ class OpenSwiftIME : InputMethodService() {
     }
 
     private fun showClipboardView() {
+        if (privacyModeActive || !settings.clipboardEnabled) return
         clipboardMode = true
         setInputView(clipboardView)
     }
@@ -296,12 +315,15 @@ class OpenSwiftIME : InputMethodService() {
 
     override fun onFinishInput() {
         super.onFinishInput()
-        if (currentWord.isNotEmpty()) {
+        if (currentWord.isNotEmpty() && !privacyModeActive) {
             detectLanguageForCurrentContext(currentWord.toString())
             userDict.learn(previousWord.ifEmpty { null }, currentWord.toString())
             rememberLanguageToken(currentWord.toString())
             userDict.save()
         }
+        currentWord.clear()
+        languageContext.clear()
+        previousWord = ""
     }
 
     companion object {

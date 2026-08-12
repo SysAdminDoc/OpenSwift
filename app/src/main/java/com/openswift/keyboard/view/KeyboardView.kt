@@ -30,6 +30,7 @@ class KeyboardView(
     private var onGlideListener: ((String) -> Unit)? = null
     private var suggestions: List<String> = emptyList()
     private var shiftActive = false
+    private var predictionEnabled = true
     private var glideDecoder = GlideDecoder(wordList, userDict)
     
     // Compute layout with number row if enabled
@@ -128,7 +129,7 @@ class KeyboardView(
         val keyHeightPx = (settings.keyHeightDp * density).toInt()
         val numRows = effectiveLayout.rows.size // includes number row if enabled
         val totalRowsHeight = keyHeightPx * numRows
-        val suggestionRowHeight = (keyHeightPx * 1.2f).toInt()
+        val suggestionRowHeight = if (predictionEnabled) (keyHeightPx * 1.2f).toInt() else 0
         val h = suggestionRowHeight + totalRowsHeight + (keyHeightPx * 0.2f).toInt() // spacing buffer
         
         setMeasuredDimension(w, h)
@@ -152,46 +153,51 @@ class KeyboardView(
         previewPaint.textSize = (keyHeightPx * 0.18f)
         
         // Draw suggestions row as pills with preview
-        var y = 4f * density // small top padding
-        canvas.drawRect(0f, 0f, w, y + suggestionHeightPx, suggestionBgPaint)
-        var x = 12f * density // responsive padding
+        var y = 0f
         suggestionBounds.clear()
-        
-        for (sugg in suggestions.take(3)) {
-            val suggWidth = suggestionPaint.measureText(sugg) + (16f * density)
-            val pillHeight = suggestionHeightPx - (8f * density)
-            val pillRadius = pillHeight / 2f
-            val pillY = y + (4f * density)
-            
-            // Prevent overflow: stop adding suggestions if they'd go off-screen
-            if (x + suggWidth > w) break
-            
-            val rect = Rect(x.toInt(), pillY.toInt(), (x + suggWidth).toInt(), (pillY + suggestionHeightPx).toInt())
-            suggestionBounds[sugg] = rect
-            
-            // Draw pill background (rounded rectangle)
-            canvas.drawRoundRect(
-                x, pillY, x + suggWidth, pillY + pillHeight,
-                pillRadius, pillRadius,
-                pillPaint
-            )
-            
-            // Draw pill border
-            canvas.drawRoundRect(
-                x, pillY, x + suggWidth, pillY + pillHeight,
-                pillRadius, pillRadius,
-                pillBorderPaint
-            )
-            
-            // Draw main suggestion text (centered vertically in pill)
-            val textY = pillY + (pillHeight / 2) + (4f * density)
-            canvas.drawText(sugg, x + suggWidth / 2, textY, suggestionPaint)
-            
-            x += suggWidth + (8f * density)
+
+        if (predictionEnabled) {
+            y = 4f * density // small top padding
+            canvas.drawRect(0f, 0f, w, y + suggestionHeightPx, suggestionBgPaint)
+            var x = 12f * density // responsive padding
+
+            for (sugg in suggestions.take(3)) {
+                val suggWidth = suggestionPaint.measureText(sugg) + (16f * density)
+                val pillHeight = suggestionHeightPx - (8f * density)
+                val pillRadius = pillHeight / 2f
+                val pillY = y + (4f * density)
+
+                // Prevent overflow: stop adding suggestions if they'd go off-screen
+                if (x + suggWidth > w) break
+
+                val rect = Rect(x.toInt(), pillY.toInt(), (x + suggWidth).toInt(), (pillY + suggestionHeightPx).toInt())
+                suggestionBounds[sugg] = rect
+
+                // Draw pill background (rounded rectangle)
+                canvas.drawRoundRect(
+                    x, pillY, x + suggWidth, pillY + pillHeight,
+                    pillRadius, pillRadius,
+                    pillPaint
+                )
+
+                // Draw pill border
+                canvas.drawRoundRect(
+                    x, pillY, x + suggWidth, pillY + pillHeight,
+                    pillRadius, pillRadius,
+                    pillBorderPaint
+                )
+
+                // Draw main suggestion text (centered vertically in pill)
+                val textY = pillY + (pillHeight / 2) + (4f * density)
+                canvas.drawText(sugg, x + suggWidth / 2, textY, suggestionPaint)
+
+                x += suggWidth + (8f * density)
+            }
+
+            y += suggestionHeightPx + (4f * density)
         }
 
         // Draw keyboard rows
-        y = y + suggestionHeightPx + (4f * density)
         keyBounds.clear()
         val keyPadding = 1.5f * density
         for (row in effectiveLayout.rows) {
@@ -317,7 +323,7 @@ class KeyboardView(
             }
             MotionEvent.ACTION_MOVE -> {
                 val elapsed = System.currentTimeMillis() - glideStartTime
-                if (!isGliding && elapsed > 80L && settings.glideEnabled) {
+                if (!isGliding && elapsed > 80L && settings.glideEnabled && predictionEnabled) {
                     isGliding = true
                 }
                 if (isGliding) {
@@ -343,7 +349,7 @@ class KeyboardView(
                     if (key != null) {
                         onKeyListener?.invoke(key.code, key.label)
                     }
-                } else if (!isGliding) {
+                } else if (!isGliding && predictionEnabled) {
                     // Check if suggestion was tapped
                     for ((sugg, rect) in suggestionBounds) {
                         if (rect.contains(event.x.toInt(), event.y.toInt())) {
@@ -394,7 +400,21 @@ class KeyboardView(
     }
 
     fun setSuggestions(sugg: List<String>) {
-        suggestions = sugg
+        suggestions = if (predictionEnabled) sugg else emptyList()
+        invalidate()
+    }
+
+    fun setPredictionEnabled(enabled: Boolean) {
+        if (predictionEnabled == enabled) return
+        predictionEnabled = enabled
+        if (!enabled) {
+            suggestions = emptyList()
+            suggestionBounds.clear()
+            isGliding = false
+            glideSamples.clear()
+            glideTrail.clear()
+        }
+        requestLayout()
         invalidate()
     }
 
