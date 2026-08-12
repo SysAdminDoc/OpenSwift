@@ -19,7 +19,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
 - **Custom Packages** — Import validated, encrypted-at-rest JSON packages containing custom themes or keyboard layouts
 - **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
-- **Data Portability** — Export/import learned words, snippets, and custom themes with merge or replace behavior
+- **Data Portability** — Export/import learned words, snippets, custom themes, and custom layouts with validated merge or confirmed replace behavior
 - **Encrypted Sync Snapshots** — Save or open passphrase-encrypted `.oswsync` documents through an Android document provider; nothing syncs automatically
 - **Clipboard Manager** — Opt-in history of 25 recent items with sensitive-clip filtering, a dedicated keyboard panel, per-item delete, and clear-all
 - **Snippets/Text Expansion** — Create, edit, and delete validated trigger→expansion pairs; type a trigger followed by space, enter, or punctuation to replace it
@@ -41,7 +41,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - `GlideDecoder` — Polyline-to-word decoding using anchored key subsequence matching
 - `WordList` + `UserDictionary` — Frequency-based per-language word stores + per-user bigram learning
 - `Settings` + `ClipboardHistory` — Persistent user preferences and clipboard state
-- `DataPortability` + `EncryptedSyncSnapshot` — Local JSON portability with optional authenticated encrypted documents
+- `DataPortability` + `EncryptedSyncSnapshot` — Bounded, validated local JSON portability with optional authenticated encrypted documents
 - `Themes` + `Layouts` — 10 built-in themes and 3 keyboard layouts with language defaults
 - `EncryptedSyncCodec` + `PluginRegistry` — Feature-gated, contract-tested boundaries for authenticated sync envelopes and in-process extensions
 
@@ -112,7 +112,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Snippets** — Manage case-insensitive triggers and multiline replacements; expansion is always disabled in private fields
 - **Per-App Profiles** — Tap the keyboard settings key inside an app to prefill its package name, then save prediction, glide, or key-height overrides; reset one profile or all profiles at any time
 - **Customization Packages** — Import a versioned JSON theme/layout package; invalid files report the exact field or keyboard action that needs correction
-- **Data Portability** — Export a JSON backup, merge imported data, or replace local learned words/snippets/custom themes
+- **Data Portability** — Export a readable JSON backup, merge imported data, or confirm replacement of local learned words/snippets/custom themes/custom layouts; complete validation happens before data changes
 - **Encrypted Sync Snapshots** — Export with a confirmed 12+ character passphrase, then merge or replace from a `.oswsync` document; OpenSwift never stores the passphrase
 - **Incognito Mode** — Disable prediction history, learning, snippets, and clipboard capture for every field
 
@@ -235,6 +235,10 @@ has no network permission, account, background-sync job, or stored passphrase.
 Snapshots contain only learned dictionaries, snippets, and custom themes in a
 versioned AES-256-GCM envelope with a PBKDF2-HMAC-SHA256 passphrase key.
 Per-app metadata and analytics are not part of the contract.
+
+Ordinary JSON portability additionally includes custom layouts for complete
+customization backup. JSON files are readable plaintext by design; use an
+encrypted `.oswsync` snapshot when the copy needs passphrase protection.
 
 The future transport client and runtime plugin registry remain compile-time
 disabled in published builds through `ENABLE_EXPERIMENTAL_SYNC` and

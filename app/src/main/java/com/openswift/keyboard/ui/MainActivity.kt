@@ -48,22 +48,30 @@ class MainActivity : AppCompatActivity() {
     private var pendingImportMode = DataPortability.ImportMode.MERGE
     private var pendingSyncImportMode = DataPortability.ImportMode.MERGE
     private var pendingSyncPassphrase: CharArray? = null
-    private val syncExecutor = Executors.newSingleThreadExecutor { runnable ->
-        Thread(runnable, "OpenSwift encrypted sync")
+    private val dataExecutor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "OpenSwift data portability")
     }
 
     private val exportData = registerForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         if (uri == null) return@registerForActivityResult
-        runCatching {
-            contentResolver.openOutputStream(uri)?.use { stream ->
-                stream.writer(Charsets.UTF_8).use { it.write(DataPortability(this).exportJson()) }
-            } ?: error("Unable to open export destination")
-        }.onSuccess {
-            toast("OpenSwift data exported")
-        }.onFailure {
-            toast("Export failed: ${it.message ?: "unknown error"}")
+        dataExecutor.execute {
+            val result = runCatching {
+                contentResolver.openOutputStream(uri, "w")?.use { stream ->
+                    stream.writer(Charsets.UTF_8).use {
+                        it.write(DataPortability(this).exportJson(DataPortability.Scope.FULL_BACKUP))
+                    }
+                } ?: error("Unable to open export destination")
+            }
+            runOnUiThread {
+                if (!isDestroyed) {
+                    result.fold(
+                        onSuccess = { toast("OpenSwift data exported") },
+                        onFailure = { toast("Export failed: ${it.message ?: "unknown error"}") },
+                    )
+                }
+            }
         }
     }
 
@@ -71,15 +79,25 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri == null) return@registerForActivityResult
-        runCatching {
-            val raw = contentResolver.openInputStream(uri)?.use { stream ->
-                stream.reader(Charsets.UTF_8).readText()
-            } ?: error("Unable to open import file")
-            DataPortability(this).importJson(raw, pendingImportMode)
-        }.onSuccess {
-            toast(it.asMessage())
-        }.onFailure {
-            toast("Import failed: ${it.message ?: "unknown error"}")
+        val mode = pendingImportMode
+        dataExecutor.execute {
+            val result = runCatching {
+                val raw = readUtf8Document(
+                    uri = uri,
+                    maxBytes = DataPortability.MAX_DOCUMENT_BYTES,
+                    label = "The data file",
+                    limitLabel = "4 MiB",
+                )
+                DataPortability(this).importJson(raw, mode, DataPortability.Scope.FULL_BACKUP)
+            }
+            runOnUiThread {
+                if (!isDestroyed) {
+                    result.fold(
+                        onSuccess = { refreshSettingsAfterImport(it.asMessage()) },
+                        onFailure = { toast("Import failed: ${it.message ?: "unknown error"}") },
+                    )
+                }
+            }
         }
     }
 
@@ -87,14 +105,20 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         if (uri == null) return@registerForActivityResult
-        runCatching {
-            CustomizationPackageManager(this).importJson(readCustomizationPackage(uri))
-        }.onSuccess {
-            toast(it.asMessage())
-            intent.putExtra(EXTRA_OPEN_SETTINGS, true)
-            recreate()
-        }.onFailure {
-            toast("Package import failed: ${it.message ?: "unknown error"}")
+        dataExecutor.execute {
+            val result = runCatching {
+                CustomizationPackageManager(this).importJson(readCustomizationPackage(uri))
+            }
+            runOnUiThread {
+                if (!isDestroyed) {
+                    result.fold(
+                        onSuccess = { refreshSettingsAfterImport(it.asMessage()) },
+                        onFailure = {
+                            toast("Package import failed: ${it.message ?: "unknown error"}")
+                        },
+                    )
+                }
+            }
         }
     }
 
@@ -156,7 +180,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         clearPendingSyncPassphrase()
-        syncExecutor.shutdown()
+        dataExecutor.shutdown()
         super.onDestroy()
     }
 
@@ -165,30 +189,56 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun readCustomizationPackage(uri: android.net.Uri): String {
+        return try {
+            readUtf8Document(
+                uri = uri,
+                maxBytes = CustomizationPackageParser.MAX_PACKAGE_BYTES,
+                label = "The package",
+                limitLabel = "512 KiB",
+            )
+        } catch (error: IllegalArgumentException) {
+            throw CustomizationPackageException(error.message ?: "Unable to read the package.")
+        }
+    }
+
+    private fun readUtf8Document(
+        uri: Uri,
+        maxBytes: Int,
+        label: String,
+        limitLabel: String,
+    ): String {
         val input = contentResolver.openInputStream(uri)
-            ?: throw CustomizationPackageException("Unable to open the selected file.")
+            ?: throw IllegalArgumentException("Unable to open the selected file.")
         val bytes = input.use {
             val result = ByteArrayOutputStream()
             val buffer = ByteArray(8192)
             while (true) {
                 val count = it.read(buffer)
                 if (count < 0) break
-                result.write(buffer, 0, count)
-                if (result.size() > CustomizationPackageParser.MAX_PACKAGE_BYTES) {
-                    throw CustomizationPackageException("The package is larger than 512 KiB.")
+                if (result.size() + count > maxBytes) {
+                    throw IllegalArgumentException("$label is larger than $limitLabel.")
                 }
+                result.write(buffer, 0, count)
             }
             result.toByteArray()
         }
-        return runCatching {
+        return try {
             Charsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
                 .onUnmappableCharacter(CodingErrorAction.REPORT)
                 .decode(ByteBuffer.wrap(bytes))
                 .toString()
-        }.getOrElse {
-            throw CustomizationPackageException("The package is not valid UTF-8 text.")
+        } catch (_: Exception) {
+            throw IllegalArgumentException("$label is not valid UTF-8 text.")
+        } finally {
+            bytes.fill(0)
         }
+    }
+
+    private fun refreshSettingsAfterImport(message: String) {
+        toast(message)
+        intent.putExtra(EXTRA_OPEN_SETTINGS, true)
+        recreate()
     }
 
     private fun launchEncryptedSyncExport(passphrase: CharArray) {
@@ -216,10 +266,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun writeEncryptedSync(uri: Uri, passphrase: CharArray) {
-        syncExecutor.execute {
+        dataExecutor.execute {
             val result = runCatching {
                 val envelope = EncryptedSyncSnapshot().encryptJson(
-                    DataPortability(this).exportJson(),
+                    DataPortability(this).exportJson(DataPortability.Scope.ENCRYPTED_SYNC),
                     passphrase,
                 )
                 try {
@@ -247,12 +297,16 @@ class MainActivity : AppCompatActivity() {
         passphrase: CharArray,
         mode: DataPortability.ImportMode,
     ) {
-        syncExecutor.execute {
+        dataExecutor.execute {
             val result = runCatching {
                 val envelope = readEncryptedEnvelope(uri)
                 try {
                     val raw = EncryptedSyncSnapshot().decryptJson(envelope, passphrase)
-                    DataPortability(this).importJson(raw, mode)
+                    DataPortability(this).importJson(
+                        raw,
+                        mode,
+                        DataPortability.Scope.ENCRYPTED_SYNC,
+                    )
                 } finally {
                     envelope.fill(0)
                 }
@@ -261,7 +315,11 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 if (!isDestroyed) {
                     result.fold(
-                        onSuccess = { toast("Encrypted sync: ${it.asMessage().lowercase()}") },
+                        onSuccess = {
+                            refreshSettingsAfterImport(
+                                "Encrypted sync: ${it.asMessage().lowercase()}",
+                            )
+                        },
                         onFailure = { toast("Encrypted import failed: ${it.message ?: "unknown error"}") },
                     )
                 }
@@ -553,6 +611,7 @@ fun EnhancedSettingsUI(
             DataPortabilityActions(
                 accentColor = accentColor,
                 textColor = textColor,
+                bgColor = bgColor,
                 onExportData = onExportData,
                 onImportMerge = onImportMerge,
                 onImportReplace = onImportReplace
@@ -598,10 +657,12 @@ fun CustomizationPackageActions(onImportCustomization: () -> Unit, textColor: Co
 fun DataPortabilityActions(
     accentColor: Color,
     textColor: Color,
+    bgColor: Color,
     onExportData: () -> Unit,
     onImportMerge: () -> Unit,
     onImportReplace: () -> Unit
 ) {
+    var confirmReplace by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.sm)
@@ -611,6 +672,12 @@ fun DataPortabilityActions(
             style = AppTypography.bodyMedium,
             color = textColor,
             fontWeight = FontWeight.Bold
+        )
+        Text(
+            "Readable JSON backup of learned words, snippets, custom themes, and custom layouts. " +
+                "Use an encrypted sync snapshot when the file needs passphrase protection.",
+            style = AppTypography.bodySmall,
+            color = textColor.copy(alpha = Alphas.secondary),
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -630,12 +697,29 @@ fun DataPortabilityActions(
                 Text("Merge")
             }
             OutlinedButton(
-                onClick = onImportReplace,
+                onClick = { confirmReplace = true },
                 modifier = Modifier.weight(1f)
             ) {
                 Text("Replace")
             }
         }
+    }
+
+    if (confirmReplace) {
+        ConfirmationDialog(
+            title = "Replace portable data?",
+            message = "After you choose a backup, its learned words, snippets, custom themes, " +
+                "and custom layouts replace the local copies. Other settings are unchanged.",
+            onConfirm = {
+                confirmReplace = false
+                onImportReplace()
+            },
+            onDismiss = { confirmReplace = false },
+            accentColor = accentColor,
+            textColor = textColor,
+            bgColor = bgColor,
+            isDangerous = true,
+        )
     }
 }
 

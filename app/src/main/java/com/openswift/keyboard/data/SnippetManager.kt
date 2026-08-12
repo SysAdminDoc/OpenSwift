@@ -141,6 +141,9 @@ class SnippetManager internal constructor(private val storage: SnippetStorage) {
 
         internal fun normalizeTrigger(raw: String): String = raw.trim()
 
+        internal fun validateImported(trigger: String, text: String): String? =
+            validateShape(normalizeTrigger(trigger), text)
+
         private fun canonical(trigger: String): String = trigger.lowercase(Locale.ROOT)
 
         private fun validateShape(trigger: String, text: String): String? = when {

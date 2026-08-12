@@ -120,7 +120,7 @@ fun AboutUI(
                     "English, German, French, Spanish, and Italian dictionaries",
                     "Offline language detection for suggestions",
                     "Emoji keyboard with categories, recents, favorites, and search",
-                    "Export and import for learned words, snippets, and custom themes",
+                    "Validated export and import for typed data, themes, and layouts",
                     "Smart predictions & auto-correct",
                     "Privacy dashboard & clipboard management",
                     "Reduced motion mode for accessibility",
