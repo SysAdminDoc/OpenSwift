@@ -21,21 +21,24 @@ class GlideDecoder(
 
     /** Convert raw gesture path samples into one suggested word (or empty). */
     fun decode(samples: List<Sample>, limit: Int = 4): List<String> {
-        if (samples.size < 2) return emptyList()
+        if (samples.size < 2 || limit <= 0) return emptyList()
 
         // Reduce the sampled polyline into a list of "anchor" keys: first key, last key,
         // and any intermediate key where the path direction changes sharply.
         val anchors = pickAnchors(samples)
         if (anchors.size < 2) return emptyList()
 
-        val first = anchors.first().char
-        val last = anchors.last().char
-        val anchorChars = anchors.map { it.char }
+        val first = anchors.first().char.lowercaseChar()
+        val last = anchors.last().char.lowercaseChar()
+        val anchorChars = anchors.map { it.char.lowercaseChar() }
 
         val targetLen = anchors.size
         val out = ArrayList<Pair<String, Double>>()
 
-        for (w in wordList.words) {
+        val candidates = LinkedHashSet<String>(wordList.words.size + userDict.getWordCount())
+        candidates.addAll(wordList.words)
+        candidates.addAll(userDict.knownWords())
+        for (w in candidates) {
             if (w.isEmpty()) continue
             if (w[0] != first) continue
             if (w.last() != last) continue
@@ -48,15 +51,16 @@ class GlideDecoder(
             out.add(w to (freqScore - lenPenalty))
         }
 
-        return out.sortedByDescending { it.second }.take(limit).map { it.first }
+        return out
+            .sortedWith(compareByDescending<Pair<String, Double>> { it.second }.thenBy { it.first })
+            .take(limit)
+            .map { it.first }
     }
 
     private fun pickAnchors(samples: List<Sample>): List<Sample> {
         val anchors = ArrayList<Sample>()
         anchors.add(samples.first())
         var lastChar = samples.first().char
-        var lastDx = 0f
-        var lastDy = 0f
         for (i in 1 until samples.size - 1) {
             val s = samples[i]
             if (s.char == lastChar) continue
@@ -75,7 +79,6 @@ class GlideDecoder(
                     lastChar = s.char
                 }
             }
-            lastDx = dx1; lastDy = dy1
         }
         if (samples.last().char != anchors.last().char) anchors.add(samples.last())
         // de-duplicate runs of the same key

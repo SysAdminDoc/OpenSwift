@@ -17,6 +17,7 @@ import com.openswift.keyboard.engine.WordList
 import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.engine.MultilingualPredictor
 import com.openswift.keyboard.engine.LanguageDetector
+import com.openswift.keyboard.engine.WordCommitPolicy
 import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.layout.Layouts
 import com.openswift.keyboard.privacy.InputPrivacyPolicy
@@ -142,27 +143,14 @@ class OpenSwiftIME : InputMethodService() {
                 if (currentWord.isEmpty()) {
                     ic.commitText(" ", 1)
                 } else {
-                    val corrected = if (privacyModeActive) {
-                        currentWord.toString()
-                    } else {
-                        detectLanguageForCurrentContext(currentWord.toString())
-                        predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
-                    }
-                    commitWord(corrected)
+                    commitWord(correctedCurrentWord())
                     ic.commitText(" ", 1)
-                    currentWord.clear()
                     updateSuggestions()
                 }
                 if (settings.autoCapitalize) requestShift(true)
             }
             KC.ENTER -> {
-                if (currentWord.isNotEmpty() && !privacyModeActive) {
-                    detectLanguageForCurrentContext(currentWord.toString())
-                    val corrected = predictor.autoCorrect(activeLanguageCode, currentWord.toString(), previousWord)
-                    userDict.learn(previousWord.ifEmpty { null }, corrected)
-                    rememberLanguageToken(corrected)
-                    previousWord = corrected
-                }
+                if (currentWord.isNotEmpty()) commitWord(correctedCurrentWord())
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
                 currentWord.clear()
@@ -207,10 +195,9 @@ class OpenSwiftIME : InputMethodService() {
                 startActivity(android.content.Intent(this, com.openswift.keyboard.ui.MainActivity::class.java))
             }
             KC.COMMA, KC.PERIOD -> {
+                if (currentWord.isNotEmpty()) commitWord(correctedCurrentWord())
                 val ch = label[0]
-                currentWord.append(ch)
-                val text = if (shiftActive) ch.uppercase() else ch.toString()
-                ic.commitText(text, 1)
+                ic.commitText(ch.toString(), 1)
                 shiftActive = false
                 keyboardView.setShift(false)
                 updateSuggestions()
@@ -243,16 +230,27 @@ class OpenSwiftIME : InputMethodService() {
 
     private fun commitWord(word: String) {
         val ic = currentInputConnection ?: return
+        val typedWord = currentWord.toString()
         if (!privacyModeActive) {
             userDict.learn(previousWord.ifEmpty { null }, word)
             rememberLanguageToken(word)
         }
-        val text = if (shiftActive && currentWord.isNotEmpty()) word.replaceFirstChar { it.uppercase() } else word
-        ic.commitText(text, 1)
+        val plan = WordCommitPolicy.plan(typedWord, word, shiftActive)
+        if (plan.charactersToDelete > 0) {
+            ic.deleteSurroundingText(plan.charactersToDelete, 0)
+        }
+        plan.textToCommit?.let { ic.commitText(it, 1) }
         currentWord.clear()
         previousWord = if (privacyModeActive) "" else word
         shiftActive = false
         keyboardView.setShift(false)
+    }
+
+    private fun correctedCurrentWord(): String {
+        val typedWord = currentWord.toString()
+        if (privacyModeActive || !settings.autoCorrect) return typedWord
+        detectLanguageForCurrentContext(typedWord)
+        return predictor.autoCorrect(activeLanguageCode, typedWord, previousWord)
     }
 
     private fun requestShift(on: Boolean) {

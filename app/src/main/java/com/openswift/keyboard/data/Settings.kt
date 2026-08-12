@@ -1,87 +1,160 @@
 package com.openswift.keyboard.data
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-class Settings(ctx: Context) {
-    private val prefs = EncryptedSharedPreferences.create(
-        ctx,
-        "openswift_prefs",
-        MasterKey.Builder(ctx).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+internal interface SettingsStore {
+    fun getString(key: String, defaultValue: String): String
+    fun putString(key: String, value: String)
+    fun putStrings(values: Map<String, String>)
+    fun getBoolean(key: String, defaultValue: Boolean): Boolean
+    fun putBoolean(key: String, value: Boolean)
+    fun getInt(key: String, defaultValue: Int): Int
+    fun putInt(key: String, value: Int)
+}
+
+private class SharedPreferencesSettingsStore(private val prefs: SharedPreferences) : SettingsStore {
+    override fun getString(key: String, defaultValue: String): String =
+        prefs.getString(key, defaultValue) ?: defaultValue
+
+    override fun putString(key: String, value: String) {
+        prefs.edit().putString(key, value).apply()
+    }
+
+    override fun putStrings(values: Map<String, String>) {
+        val editor = prefs.edit()
+        values.forEach { (key, value) -> editor.putString(key, value) }
+        editor.apply()
+    }
+
+    override fun getBoolean(key: String, defaultValue: Boolean): Boolean =
+        prefs.getBoolean(key, defaultValue)
+
+    override fun putBoolean(key: String, value: Boolean) {
+        prefs.edit().putBoolean(key, value).apply()
+    }
+
+    override fun getInt(key: String, defaultValue: Int): Int = prefs.getInt(key, defaultValue)
+
+    override fun putInt(key: String, value: Int) {
+        prefs.edit().putInt(key, value).apply()
+    }
+}
+
+internal class MutableMapSettingsStore(
+    private val values: MutableMap<String, Any> = mutableMapOf()
+) : SettingsStore {
+    override fun getString(key: String, defaultValue: String): String =
+        values[key] as? String ?: defaultValue
+
+    override fun putString(key: String, value: String) {
+        values[key] = value
+    }
+
+    override fun putStrings(values: Map<String, String>) {
+        this.values.putAll(values)
+    }
+
+    override fun getBoolean(key: String, defaultValue: Boolean): Boolean =
+        values[key] as? Boolean ?: defaultValue
+
+    override fun putBoolean(key: String, value: Boolean) {
+        values[key] = value
+    }
+
+    override fun getInt(key: String, defaultValue: Int): Int = values[key] as? Int ?: defaultValue
+
+    override fun putInt(key: String, value: Int) {
+        values[key] = value
+    }
+}
+
+class Settings internal constructor(private val store: SettingsStore) {
+
+    constructor(ctx: Context) : this(SharedPreferencesSettingsStore(encryptedPreferences(ctx)))
 
     var theme: String
-        get() = prefs.getString("theme", "amoled")!!
-        set(v) { prefs.edit().putString("theme", v).apply() }
+        get() = store.getString("theme", "amoled")
+        set(value) = store.putString("theme", value)
 
     var layout: String
-        get() = prefs.getString("layout", "qwerty")!!
-        set(v) { prefs.edit().putString("layout", v).apply() }
+        get() = store.getString("layout", "qwerty")
+        set(value) = store.putString("layout", value)
 
     var language: String
-        get() = KeyboardLanguages.byCode(prefs.getString("language", KeyboardLanguages.English.code)).code
-        set(v) {
-            val language = KeyboardLanguages.byCode(v)
-            val current = prefs.getString("language", KeyboardLanguages.English.code)
-            val editor = prefs.edit().putString("language", language.code)
-            if (current != language.code) {
-                editor.putString("layout", language.layoutId)
-            }
-            editor.apply()
+        get() = KeyboardLanguages.byCode(
+            store.getString("language", KeyboardLanguages.English.code)
+        ).code
+        set(value) {
+            val language = KeyboardLanguages.byCode(value)
+            val current = store.getString("language", KeyboardLanguages.English.code)
+            val updates = mutableMapOf("language" to language.code)
+            if (current != language.code) updates["layout"] = language.layoutId
+            store.putStrings(updates)
         }
 
     var glideEnabled: Boolean
-        get() = prefs.getBoolean("glide", true)
-        set(v) { prefs.edit().putBoolean("glide", v).apply() }
+        get() = store.getBoolean("glide", true)
+        set(value) = store.putBoolean("glide", value)
 
     var autoCorrect: Boolean
-        get() = prefs.getBoolean("autocorrect", true)
-        set(v) { prefs.edit().putBoolean("autocorrect", v).apply() }
+        get() = store.getBoolean("autocorrect", true)
+        set(value) = store.putBoolean("autocorrect", value)
 
     var languageDetection: Boolean
-        get() = prefs.getBoolean("language_detection", true)
-        set(v) { prefs.edit().putBoolean("language_detection", v).apply() }
+        get() = store.getBoolean("language_detection", true)
+        set(value) = store.putBoolean("language_detection", value)
 
     var autoCapitalize: Boolean
-        get() = prefs.getBoolean("autocap", true)
-        set(v) { prefs.edit().putBoolean("autocap", v).apply() }
+        get() = store.getBoolean("autocap", true)
+        set(value) = store.putBoolean("autocap", value)
 
     var numberRow: Boolean
-        get() = prefs.getBoolean("numrow", true)
-        set(v) { prefs.edit().putBoolean("numrow", v).apply() }
+        get() = store.getBoolean("numrow", true)
+        set(value) = store.putBoolean("numrow", value)
 
     var hapticFeedback: Boolean
-        get() = prefs.getBoolean("haptic", true)
-        set(v) { prefs.edit().putBoolean("haptic", v).apply() }
+        get() = store.getBoolean("haptic", true)
+        set(value) = store.putBoolean("haptic", value)
 
     var soundFeedback: Boolean
-        get() = prefs.getBoolean("sound", false)
-        set(v) { prefs.edit().putBoolean("sound", v).apply() }
+        get() = store.getBoolean("sound", false)
+        set(value) = store.putBoolean("sound", value)
 
     var keyHeightDp: Int
-        get() = prefs.getInt("keyHeight", 56)
-        set(v) { prefs.edit().putInt("keyHeight", v).apply() }
+        get() = store.getInt("keyHeight", 56)
+        set(value) = store.putInt("keyHeight", value)
 
     var powerSaveMode: Boolean
-        get() = prefs.getBoolean("powersave", false)
-        set(v) { prefs.edit().putBoolean("powersave", v).apply() }
+        get() = store.getBoolean("powersave", false)
+        set(value) = store.putBoolean("powersave", value)
 
     var clipboardEnabled: Boolean
-        get() = prefs.getBoolean("clipboard", false)
-        set(v) { prefs.edit().putBoolean("clipboard", v).apply() }
+        get() = store.getBoolean("clipboard", false)
+        set(value) = store.putBoolean("clipboard", value)
 
     var perAppTint: Boolean
-        get() = prefs.getBoolean("perapp_tint", false)
-        set(v) { prefs.edit().putBoolean("perapp_tint", v).apply() }
+        get() = store.getBoolean("perapp_tint", false)
+        set(value) = store.putBoolean("perapp_tint", value)
 
     var incognitoMode: Boolean
-        get() = prefs.getBoolean("incognito", false)
-        set(v) { prefs.edit().putBoolean("incognito", v).apply() }
+        get() = store.getBoolean("incognito", false)
+        set(value) = store.putBoolean("incognito", value)
 
     var reducedMotion: Boolean
-        get() = prefs.getBoolean("reduced_motion", false)
-        set(v) { prefs.edit().putBoolean("reduced_motion", v).apply() }
+        get() = store.getBoolean("reduced_motion", false)
+        set(value) = store.putBoolean("reduced_motion", value)
+
+    companion object {
+        private fun encryptedPreferences(ctx: Context): SharedPreferences =
+            EncryptedSharedPreferences.create(
+                ctx,
+                "openswift_prefs",
+                MasterKey.Builder(ctx).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+    }
 }

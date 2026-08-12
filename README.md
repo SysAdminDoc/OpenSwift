@@ -110,8 +110,10 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 For the current incomplete word:
 - Prefix match wins (if word starts with typed prefix)
 - Fuzzy match (Damerau-Levenshtein ≤ edit budget)
+- Bundled words use an indexed prefix range and length buckets instead of a full-list scan
+- Learned-only words are first-class candidates alongside bundled words
 - Frequency weighting: log10(frequency + user-count + 1)
-- Bigram boost: +1.5× if word likely follows previous word (user learns)
+- Bigram boost scales with the locally learned previous-word count
 
 ### Multilingual Input
 Manual language selection switches the active offline dictionary and learned-word store:
@@ -123,15 +125,15 @@ Manual language selection switches the active offline dictionary and learned-wor
 When language detection is enabled, OpenSwift scores the current word and recent local context against bundled dictionaries and accent hints. No typed text is sent off-device.
 
 ### Auto-Correct
-Applied on space/enter:
+Applied at space, enter, and punctuation boundaries when enabled:
 - If word length ≥ 3 and not in dictionary, find closest match
-- Bounded edit distance; frequency-weighted
+- Conservative bounded edit distance; uncertain matches preserve the typed word
 - Learns user's correction pattern
 
 ## Performance
 
 - **Dictionary**: 3500+ common English words in raw resource
-- **Prediction**: O(n) scan with early exit (edit distance budget)
+- **Prediction**: O(log n + k) indexed prefix lookup; fuzzy work is restricted to nearby word lengths
 - **Glide decoding**: O(m·n) (m anchors, n dictionary words)
 - **Memory**: ~8 MB (word list + user dictionary)
 
@@ -139,7 +141,7 @@ Applied on space/enter:
 
 - **Language**: Kotlin
 - **UI**: Custom View (KeyboardView) + Jetpack Compose (Settings)
-- **Persistence**: SharedPreferences (settings, clipboard, user dictionary)
+- **Persistence**: AES-256 encrypted SharedPreferences with typed-data migration and backup exclusion
 - **Dictionary**: 3500-word frequency-weighted English word list
 - **Targeting**: minSdk 26 (Android 8), targetSdk 35
 - **Build System**: Gradle 8+, ProGuard minification (R8)

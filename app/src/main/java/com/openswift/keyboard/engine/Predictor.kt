@@ -1,14 +1,12 @@
 package com.openswift.keyboard.engine
 
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * Generates suggestions for the current word using:
- *  - exact prefix match (top by frequency)
- *  - fuzzy match (Damerau-Levenshtein distance <= edit budget)
- *  - bigram boost from the user dictionary based on the previous word
- */
+/** Indexed candidate generation and deterministic ranking for tap typing. */
 class Predictor(
     private val wordList: WordList,
     private val userDict: UserDictionary
@@ -16,92 +14,160 @@ class Predictor(
 
     /** Returns up to [limit] suggestions, best first. */
     fun suggest(prefix: String, previousWord: String?, limit: Int = 3): List<String> {
-        val p = prefix.lowercase()
-        if (p.isEmpty()) {
-            // No current word - return likely next words from bigrams, else top common words.
+        if (limit <= 0) return emptyList()
+        val normalizedPrefix = prefix.trim().lowercase(Locale.ROOT)
+        if (normalizedPrefix.isEmpty()) {
             val byBigram = previousWord?.let { userDict.nextAfter(it, limit) }.orEmpty()
-            if (byBigram.isNotEmpty()) return byBigram
-            return wordList.words.take(limit)
+            return if (byBigram.isNotEmpty()) byBigram else wordList.words.take(limit)
         }
 
-        val budget = when {
-            p.length <= 3 -> 1
-            p.length <= 6 -> 2
-            else -> 3
+        val budget = editBudget(normalizedPrefix.length)
+        val candidates = LinkedHashSet<String>()
+        candidates.addAll(wordList.prefixMatches(normalizedPrefix))
+        candidates.addAll(userDict.wordsStartingWith(normalizedPrefix))
+        previousWord?.let { previous ->
+            userDict.nextAfter(previous, BIGRAM_CANDIDATE_LIMIT)
+                .filterTo(candidates) { it.startsWith(normalizedPrefix) }
         }
 
-        data class Cand(val word: String, val score: Double)
-        val results = ArrayList<Cand>(64)
-
-        for (w in wordList.words) {
-            if (w.length > p.length + budget + 4) continue
-            val score = scoreCandidate(p, w, previousWord, budget) ?: continue
-            results.add(Cand(w, score))
+        // Prefix matches dominate normal typing. Only pay for fuzzy generation when
+        // there are too few direct candidates to fill a useful suggestion strip.
+        if (candidates.size < max(MIN_FUZZY_POOL, limit * 4)) {
+            wordList.wordsWithinLength(normalizedPrefix.length, budget)
+                .filterTo(candidates) { correctionDistance(normalizedPrefix, it, budget) >= 0 }
+            userDict.knownWords()
+                .asSequence()
+                .filter { abs(it.length - normalizedPrefix.length) <= budget }
+                .filterTo(candidates) { correctionDistance(normalizedPrefix, it, budget) >= 0 }
         }
-        for (w in userDict.let { listOf<String>() } + listOf<String>()) { /* placeholder */ }
 
-        return results.sortedByDescending { it.score }.take(limit).map { it.word }
+        return candidates
+            .mapNotNull { word ->
+                scoreCandidate(normalizedPrefix, word, previousWord, budget)?.let { score ->
+                    Candidate(word, score)
+                }
+            }
+            .sortedWith(compareByDescending<Candidate> { it.score }.thenBy { it.word })
+            .take(limit)
+            .map { it.word }
     }
 
-    /** Best correction for an entered word, or the word itself if it's already valid/short. */
+    /** Returns a conservative correction, leaving uncertain or known words unchanged. */
     fun autoCorrect(typed: String, previousWord: String?): String {
-        if (typed.length < 3) return typed
-        if (wordList.contains(typed) || userDict.isKnown(typed)) return typed
-        val s = suggest(typed, previousWord, limit = 1)
-        return s.firstOrNull() ?: typed
+        val normalizedTyped = typed.trim().lowercase(Locale.ROOT)
+        if (normalizedTyped.length < MIN_AUTOCORRECT_LENGTH) return typed
+        if (wordList.contains(normalizedTyped) || userDict.isKnown(normalizedTyped)) return typed
+
+        val budget = editBudget(normalizedTyped.length)
+        val candidates = LinkedHashSet<String>()
+        wordList.wordsWithinLength(normalizedTyped.length, budget).forEach(candidates::add)
+        userDict.knownWords()
+            .filterTo(candidates) { abs(it.length - normalizedTyped.length) <= budget }
+
+        val best = candidates
+            .mapNotNull { word ->
+                val distance = correctionDistance(normalizedTyped, word, budget)
+                if (distance < 0 || !isConfidentCorrection(normalizedTyped, word, distance)) {
+                    null
+                } else {
+                    val frequency = wordList.frequency(word) + userDict.unigramCount(word)
+                    val bigram = previousWord?.let { userDict.bigramCount(it, word) } ?: 0
+                    val score = ((budget - distance) * 2.0) +
+                        log10(frequency.coerceAtLeast(1).toDouble() + 1.0) +
+                        bigramBoost(bigram)
+                    Correction(word, distance, score)
+                }
+            }
+            .sortedWith(
+                compareBy<Correction> { it.distance }
+                    .thenByDescending { it.score }
+                    .thenBy { it.word }
+            )
+            .firstOrNull()
+
+        return best?.word ?: typed
     }
 
-    private fun scoreCandidate(prefix: String, word: String, prev: String?, budget: Int): Double? {
-        val pl = prefix.length
-        val wl = word.length
-
-        // Strong score: word starts with prefix
-        val baseFreq = (wordList.frequency(word) + userDict.unigramCount(word)).coerceAtLeast(1)
-        val freqScore = Math.log10(baseFreq.toDouble() + 1.0)
+    private fun scoreCandidate(
+        prefix: String,
+        word: String,
+        previousWord: String?,
+        budget: Int
+    ): Double? {
+        val frequency = wordList.frequency(word) + userDict.unigramCount(word)
+        val frequencyScore = log10(frequency.coerceAtLeast(1).toDouble() + 1.0)
+        val bigram = previousWord?.let { userDict.bigramCount(it, word) } ?: 0
 
         if (word.startsWith(prefix)) {
-            // shorter completions slightly preferred
-            val lenBonus = 1.0 - (wl - pl).coerceAtMost(8) * 0.02
-            val bigramBonus = if (prev != null && userDict.nextAfter(prev).contains(word)) 1.5 else 0.0
-            return 5.0 + freqScore + lenBonus + bigramBonus
+            val completionPenalty = (word.length - prefix.length).coerceAtMost(12) * 0.03
+            return PREFIX_BASE_SCORE + frequencyScore - completionPenalty + bigramBoost(bigram)
         }
 
-        if (kotlin.math.abs(wl - pl) > budget) return null
-        val d = damerauLevenshtein(prefix, word, budget)
-        if (d < 0 || d > budget) return null
-        val bigramBonus = if (prev != null && userDict.nextAfter(prev).contains(word)) 1.0 else 0.0
-        return (budget - d).toDouble() + freqScore * 0.5 + bigramBonus
+        val distance = correctionDistance(prefix, word, budget)
+        if (distance < 0) return null
+        return (budget - distance).toDouble() + (frequencyScore * 0.5) + bigramBoost(bigram)
     }
 
-    /**
-     * Bounded Damerau-Levenshtein distance. Returns -1 if the distance exceeds [maxDist].
-     */
-    private fun damerauLevenshtein(a: String, b: String, maxDist: Int): Int {
-        val n = a.length; val m = b.length
-        if (kotlin.math.abs(n - m) > maxDist) return -1
-        val prev2 = IntArray(m + 1)
-        val prev1 = IntArray(m + 1) { it }
-        val cur = IntArray(m + 1)
-        for (i in 1..n) {
-            cur[0] = i
-            var rowMin = cur[0]
-            val from = max(1, i - maxDist)
-            val to = min(m, i + maxDist)
-            if (from > 1) cur[from - 1] = maxDist + 1
-            for (j in from..to) {
-                val cost = if (a[i - 1] == b[j - 1]) 0 else 1
-                var v = min(min(cur[j - 1] + 1, prev1[j] + 1), prev1[j - 1] + cost)
+    private fun correctionDistance(typed: String, candidate: String, budget: Int): Int {
+        if (abs(typed.length - candidate.length) > budget) return -1
+        return damerauLevenshtein(typed, candidate, budget)
+    }
+
+    private fun isConfidentCorrection(typed: String, candidate: String, distance: Int): Boolean {
+        val longestLength = max(typed.length, candidate.length)
+        return distance > 0 && distance.toDouble() / longestLength <= MAX_CORRECTION_RATIO
+    }
+
+    /** Bounded Damerau-Levenshtein distance; returns -1 when [maxDistance] is exceeded. */
+    internal fun damerauLevenshtein(a: String, b: String, maxDistance: Int): Int {
+        if (abs(a.length - b.length) > maxDistance) return -1
+        val previousPrevious = IntArray(b.length + 1)
+        var previous = IntArray(b.length + 1) { it }
+        var current = IntArray(b.length + 1)
+
+        for (i in 1..a.length) {
+            current[0] = i
+            var rowMinimum = current[0]
+            for (j in 1..b.length) {
+                val substitutionCost = if (a[i - 1] == b[j - 1]) 0 else 1
+                var value = min(
+                    min(current[j - 1] + 1, previous[j] + 1),
+                    previous[j - 1] + substitutionCost
+                )
                 if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) {
-                    v = min(v, prev2[j - 2] + 1)
+                    value = min(value, previousPrevious[j - 2] + 1)
                 }
-                cur[j] = v
-                if (v < rowMin) rowMin = v
+                current[j] = value
+                rowMinimum = min(rowMinimum, value)
             }
-            if (rowMin > maxDist) return -1
-            System.arraycopy(prev1, 0, prev2, 0, m + 1)
-            System.arraycopy(cur, 0, prev1, 0, m + 1)
+            if (rowMinimum > maxDistance) return -1
+            System.arraycopy(previous, 0, previousPrevious, 0, previous.size)
+            val swap = previous
+            previous = current
+            current = swap
         }
-        val d = prev1[m]
-        return if (d > maxDist) -1 else d
+
+        return previous[b.length].takeIf { it <= maxDistance } ?: -1
+    }
+
+    private fun editBudget(length: Int): Int = when {
+        length <= 4 -> 1
+        length <= 8 -> 2
+        else -> 3
+    }
+
+    private fun bigramBoost(count: Int): Double =
+        if (count <= 0) 0.0 else BIGRAM_WEIGHT * log10(count.toDouble() + 1.0)
+
+    private data class Candidate(val word: String, val score: Double)
+    private data class Correction(val word: String, val distance: Int, val score: Double)
+
+    private companion object {
+        const val MIN_AUTOCORRECT_LENGTH = 3
+        const val MIN_FUZZY_POOL = 12
+        const val BIGRAM_CANDIDATE_LIMIT = 32
+        const val PREFIX_BASE_SCORE = 5.0
+        const val BIGRAM_WEIGHT = 5.0
+        const val MAX_CORRECTION_RATIO = 0.34
     }
 }
