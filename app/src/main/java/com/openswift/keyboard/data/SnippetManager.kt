@@ -8,7 +8,7 @@ package com.openswift.keyboard.data
  */
 class SnippetManager(ctx: android.content.Context) {
 
-    private val prefs = ctx.getSharedPreferences("snippets", android.content.Context.MODE_PRIVATE)
+    private val prefs = SecurePreferences.open(ctx, TypedDataStores.SNIPPETS)
     private val snippets: MutableList<Snippet> = mutableListOf()
 
     data class Snippet(val trigger: String, val text: String)

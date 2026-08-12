@@ -1,6 +1,8 @@
 package com.openswift.keyboard.engine
 
 import android.content.Context
+import com.openswift.keyboard.data.SecurePreferences
+import com.openswift.keyboard.data.TypedDataStores
 import org.json.JSONObject
 
 /**
@@ -10,8 +12,8 @@ import org.json.JSONObject
  */
 class UserDictionary(ctx: Context, languageCode: String = "en") {
 
-    private val prefsName = if (languageCode == "en") "user_dict" else "user_dict_$languageCode"
-    private val prefs = ctx.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+    private val prefsName = TypedDataStores.userDictionary(languageCode)
+    private val prefs = SecurePreferences.open(ctx, prefsName)
     private val unigram: HashMap<String, Int> = HashMap()
     private val bigram: HashMap<String, HashMap<String, Int>> = HashMap()
 

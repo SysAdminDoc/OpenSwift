@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openswift.keyboard.data.ClipboardHistory
+import com.openswift.keyboard.data.TypedDataStores
 import com.openswift.keyboard.engine.UserDictionary
 
 @Composable
@@ -24,6 +25,7 @@ fun PrivacyUI(
     textColor: Color,
     accentColor: Color
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var clipboardItems by remember { mutableStateOf(clipboardHistory.items()) }
     var wordCount by remember { mutableStateOf(userDict.getWordCount()) }
     var showClearConfirmation by remember { mutableStateOf(false) }
@@ -172,7 +174,7 @@ fun PrivacyUI(
                 )
                 
                 Text(
-                    "Permanently delete all clipboard history and learned words. This action cannot be undone.",
+                    "Permanently delete clipboard history, learned words, snippets, custom themes, emoji history, per-app profiles, and local usage data. This action cannot be undone.",
                     style = AppTypography.bodySmall,
                     color = textColor.copy(alpha = 0.8f)
                 )
@@ -226,10 +228,11 @@ fun PrivacyUI(
     if (showDeleteAllConfirmation) {
         ConfirmationDialog(
             title = "Delete All Data?",
-            message = "This will permanently delete clipboard history and learned words.",
+            message = "This will permanently delete all locally stored typing and customization data.",
             onConfirm = {
                 clipboardHistory.clear()
                 userDict.reset()
+                TypedDataStores.clearAll(context)
                 clipboardItems = emptyList()
                 wordCount = 0
                 showDeleteAllConfirmation = false

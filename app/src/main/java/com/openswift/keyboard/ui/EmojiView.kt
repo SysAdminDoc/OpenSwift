@@ -8,6 +8,8 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import com.openswift.keyboard.data.SecurePreferences
+import com.openswift.keyboard.data.TypedDataStores
 import com.openswift.keyboard.theme.Themes
 import kotlin.math.max
 
@@ -18,7 +20,7 @@ class EmojiView @JvmOverloads constructor(
 
     var onEmojiSelected: ((String) -> Unit)? = null
 
-    private val prefs = ctx.getSharedPreferences("emoji_picker", Context.MODE_PRIVATE)
+    private val prefs = SecurePreferences.open(ctx, TypedDataStores.EMOJI_PICKER)
     private val theme = Themes.Amoled
     private val density = resources.displayMetrics.density
     private val categoryBounds = mutableMapOf<String, RectF>()

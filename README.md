@@ -19,7 +19,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
 - **Custom Themes** — Create and edit themes with full color customization
 - **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
-- **Data Portability** — Export/import learned words, snippets, and custom themes with merge or replace behavior
+- **Data Portability** — Export/import encrypted-at-rest learned words, snippets, and custom themes with merge or replace behavior
 - **Clipboard Manager** — Swipeable history of 25 recent items with delete-on-swipe
 - **Snippets/Text Expansion** — Create custom trigger→expansion pairs for instant text insertion
 - **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
@@ -146,7 +146,8 @@ Applied on space/enter:
 ## Privacy & Security
 
 - **Zero cloud dependency** — No network requests, no account required
-- **Local-only** — All data stored in app's private SharedPreferences
+- **Encrypted at rest** — Clipboard history, snippets, learned words, local usage data, per-app profiles, emoji history, settings, and custom themes use AES-256 encrypted preferences
+- **No device backup** — Android cloud backup and device-transfer extraction are disabled for OpenSwift data
 - **Open source** — MIT licensed; code is auditable
 - **No telemetry** — No analytics, no crash reporting, no ads
 - **Automatic incognito fields** — Password and app-declared private/no-suggestions editors never expose suggestions or feed local learning and clipboard history

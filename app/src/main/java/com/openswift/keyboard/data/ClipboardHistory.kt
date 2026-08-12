@@ -2,14 +2,12 @@ package com.openswift.keyboard.data
 
 import android.content.ClipboardManager as SystemClipboard
 import android.content.Context
-import android.content.SharedPreferences
 import org.json.JSONArray
 
 /** Tracks the most recent clipboard items for the keyboard's clipboard panel. */
 class ClipboardHistory(ctx: Context) {
 
-    private val prefs: SharedPreferences =
-        ctx.getSharedPreferences("clipboard_history", Context.MODE_PRIVATE)
+    private val prefs = SecurePreferences.open(ctx, TypedDataStores.CLIPBOARD_HISTORY)
 
     fun items(): List<String> {
         val raw = prefs.getString("items", "[]") ?: "[]"

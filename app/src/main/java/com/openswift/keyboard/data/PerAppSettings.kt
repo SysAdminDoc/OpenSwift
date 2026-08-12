@@ -8,7 +8,7 @@ import android.content.Context
  */
 class PerAppSettings(ctx: Context) {
 
-    private val prefs = ctx.getSharedPreferences("per_app", Context.MODE_PRIVATE)
+    private val prefs = SecurePreferences.open(ctx, TypedDataStores.PER_APP)
 
     data class AppConfig(
         val packageName: String,

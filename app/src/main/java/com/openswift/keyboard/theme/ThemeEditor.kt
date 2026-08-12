@@ -2,11 +2,19 @@ package com.openswift.keyboard.theme
 
 import android.content.Context
 import androidx.preference.PreferenceManager
+import com.openswift.keyboard.data.SecurePreferences
+import com.openswift.keyboard.data.TypedDataStores
 
 /** Per-user custom theme editor: allows color customization of any theme. */
 class ThemeEditor(ctx: Context) {
 
-    private val prefs = PreferenceManager.getDefaultSharedPreferences(ctx)
+    private val legacyPrefs = PreferenceManager.getDefaultSharedPreferences(ctx)
+    private val prefs = SecurePreferences.open(
+        context = ctx,
+        storeName = TypedDataStores.CUSTOM_THEMES,
+        legacyPreferences = legacyPrefs,
+        migrateKey = { it.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX) }
+    )
 
     data class CustomTheme(
         val id: String,
@@ -22,7 +30,7 @@ class ThemeEditor(ctx: Context) {
     )
 
     fun createCustom(baseTheme: KbTheme, edits: Map<String, Int>): CustomTheme {
-        val id = "custom_${System.currentTimeMillis()}"
+        val id = TypedDataStores.CUSTOM_THEME_PREFIX + System.currentTimeMillis()
         return CustomTheme(
             id = id,
             name = "Custom (${baseTheme.name})",
@@ -73,7 +81,7 @@ class ThemeEditor(ctx: Context) {
     }
 
     fun listCustom(): List<CustomTheme> {
-        val all = prefs.all.keys.filter { it.startsWith("custom_") }
+        val all = prefs.all.keys.filter { it.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX) }
         return all.mapNotNull { load(it) }
     }
 

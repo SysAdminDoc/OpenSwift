@@ -87,9 +87,9 @@ class DataPortability(private val context: Context) {
     }
 
     private fun exportCustomThemes(): JSONArray {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val prefs = customThemePrefs()
         val themes = JSONArray()
-        prefs.all.keys.sorted().filter { it.startsWith(CUSTOM_THEME_PREFIX) }.forEach { key ->
+        prefs.all.keys.sorted().filter { it.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX) }.forEach { key ->
             val raw = prefs.getString(key, null)
             if (!raw.isNullOrBlank()) {
                 themes.put(raw.toJsonObject())
@@ -99,34 +99,38 @@ class DataPortability(private val context: Context) {
     }
 
     private fun importThemes(imported: JSONArray, mode: ImportMode) {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val prefs = customThemePrefs()
         val editor = prefs.edit()
         if (mode == ImportMode.REPLACE) {
-            prefs.all.keys.filter { it.startsWith(CUSTOM_THEME_PREFIX) }.forEach { editor.remove(it) }
+            prefs.all.keys.filter { it.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX) }.forEach { editor.remove(it) }
         }
         for (i in 0 until imported.length()) {
             val theme = imported.getJSONObject(i)
             val id = theme.getString("id")
-            require(id.startsWith(CUSTOM_THEME_PREFIX)) { "Invalid custom theme id" }
+            require(id.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX)) { "Invalid custom theme id" }
             editor.putString(id, theme.toString())
         }
         editor.apply()
     }
 
     private fun dictionaryPrefs(languageCode: String) =
-        context.getSharedPreferences(dictionaryPrefsName(languageCode), Context.MODE_PRIVATE)
+        SecurePreferences.open(context, dictionaryPrefsName(languageCode))
 
     private fun snippetPrefs() =
-        context.getSharedPreferences(SNIPPET_PREFS, Context.MODE_PRIVATE)
+        SecurePreferences.open(context, TypedDataStores.SNIPPETS)
+
+    private fun customThemePrefs() = SecurePreferences.open(
+        context = context,
+        storeName = TypedDataStores.CUSTOM_THEMES,
+        legacyPreferences = PreferenceManager.getDefaultSharedPreferences(context),
+        migrateKey = { it.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX) }
+    )
 
     companion object {
         private const val SCHEMA_VERSION = 1
         private const val DATA_KEY = "data"
-        private const val SNIPPET_PREFS = "snippets"
-        private const val CUSTOM_THEME_PREFIX = "custom_"
-
         fun dictionaryPrefsName(languageCode: String): String =
-            if (languageCode == "en") "user_dict" else "user_dict_$languageCode"
+            TypedDataStores.userDictionary(languageCode)
 
         fun mergeDictionaryJson(current: JSONObject, imported: JSONObject): JSONObject {
             val merged = JSONObject()

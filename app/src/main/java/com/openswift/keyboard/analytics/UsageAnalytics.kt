@@ -2,6 +2,8 @@ package com.openswift.keyboard.analytics
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.openswift.keyboard.data.SecurePreferences
+import com.openswift.keyboard.data.TypedDataStores
 
 /**
  * Simple in-device analytics: tracks usage patterns to improve prediction.
@@ -9,7 +11,7 @@ import android.content.SharedPreferences
  */
 class UsageAnalytics(ctx: Context) {
 
-    private val prefs: SharedPreferences = ctx.getSharedPreferences("analytics", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = SecurePreferences.open(ctx, TypedDataStores.ANALYTICS)
 
     fun recordKeyPress(key: String) {
         val count = prefs.getInt("key_$key", 0)
