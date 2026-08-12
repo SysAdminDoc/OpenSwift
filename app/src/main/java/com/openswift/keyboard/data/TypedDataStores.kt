@@ -10,6 +10,7 @@ object TypedDataStores {
     const val ANALYTICS = "analytics"
     const val PER_APP = "per_app"
     const val CUSTOM_THEMES = "custom_themes"
+    const val CUSTOM_LAYOUTS = "custom_layouts"
     const val EMOJI_PICKER = "emoji_picker"
     const val CUSTOM_THEME_PREFIX = "custom_"
 
@@ -22,7 +23,8 @@ object TypedDataStores {
             SNIPPETS,
             ANALYTICS,
             PER_APP,
-            EMOJI_PICKER
+            EMOJI_PICKER,
+            CUSTOM_LAYOUTS,
         ) + KeyboardLanguages.all.map { userDictionary(it.code) }
         standardStores.distinct().forEach { SecurePreferences.clear(context, it) }
 

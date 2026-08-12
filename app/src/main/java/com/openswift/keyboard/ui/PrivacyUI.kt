@@ -174,7 +174,7 @@ fun PrivacyUI(
                 )
                 
                 Text(
-                    "Permanently delete clipboard history, learned words, snippets, custom themes, emoji history, per-app profiles, and local usage data. This action cannot be undone.",
+                    "Permanently delete clipboard history, learned words, snippets, custom themes and layouts, emoji history, per-app profiles, and local usage data. This action cannot be undone.",
                     style = AppTypography.bodySmall,
                     color = textColor.copy(alpha = 0.8f)
                 )

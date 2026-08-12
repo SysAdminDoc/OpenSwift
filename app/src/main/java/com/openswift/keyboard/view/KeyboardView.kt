@@ -14,6 +14,7 @@ import com.openswift.keyboard.engine.WordList
 import com.openswift.keyboard.layout.Key
 import com.openswift.keyboard.layout.KeyLayout
 import com.openswift.keyboard.layout.KeyCode as KC
+import com.openswift.keyboard.theme.KbTheme
 import com.openswift.keyboard.theme.Themes
 import kotlin.math.ceil
 
@@ -23,6 +24,7 @@ class KeyboardView(
     private var wordList: WordList,
     private var userDict: UserDictionary,
     private var keyLayout: KeyLayout,
+    private val theme: KbTheme = Themes.byId(settings.theme),
     attrs: AttributeSet? = null,
     defStyle: Int = 0
 ) : View(ctx, attrs, defStyle) {
@@ -51,7 +53,6 @@ class KeyboardView(
         keyLayout
     }
 
-    private val theme = Themes.byId(settings.theme)
     private val keyBounds = mutableMapOf<Key, Rect>()
     private val keyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER

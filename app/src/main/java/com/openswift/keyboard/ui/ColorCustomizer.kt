@@ -24,7 +24,8 @@ fun ColorCustomizer(
     bgColor: Color,
     textColor: Color,
     accentColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    themes: List<KbTheme> = Themes.all,
 ) {
     Column(
         modifier = modifier
@@ -37,7 +38,7 @@ fun ColorCustomizer(
             color = textColor
         )
         
-        Themes.all.forEach { theme ->
+        themes.forEach { theme ->
             ColorOption(
                 theme = theme,
                 isSelected = currentThemeId == theme.id,

@@ -17,7 +17,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
 - **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
-- **Custom Themes** — Create and edit themes with full color customization
+- **Custom Packages** — Import validated, encrypted-at-rest JSON packages containing custom themes or keyboard layouts
 - **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
 - **Data Portability** — Export/import encrypted-at-rest learned words, snippets, and custom themes with merge or replace behavior
 - **Clipboard Manager** — Opt-in history of 25 recent items with sensitive-clip filtering, a dedicated keyboard panel, per-item delete, and clear-all
@@ -109,8 +109,49 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Clipboard History** — Opt in to encrypted clipboard capture; Android-marked sensitive clips and private fields are always skipped
 - **Snippets** — Manage case-insensitive triggers and multiline replacements; expansion is always disabled in private fields
 - **Per-App Profiles** — Tap the keyboard settings key inside an app to prefill its package name, then save prediction, glide, or key-height overrides; reset one profile or all profiles at any time
+- **Customization Packages** — Import a versioned JSON theme/layout package; invalid files report the exact field or keyboard action that needs correction
 - **Data Portability** — Export a JSON backup, merge imported data, or replace local learned words/snippets/custom themes
 - **Incognito Mode** — Disable prediction history, learning, snippets, and clipboard capture for every field
+
+## Customization Package Format
+
+OpenSwift accepts UTF-8 JSON files up to 512 KiB from **Settings → Advanced →
+Customization Packages**. Version 1 packages use the following envelope; each
+file can contain up to 10 themes and 10 layouts, and must contain at least one:
+
+```json
+{
+  "format": "openswift.customization",
+  "schemaVersion": 1,
+  "name": "Midnight Pack",
+  "themes": [
+    {
+      "id": "custom_midnight",
+      "name": "Midnight",
+      "colors": {
+        "background": "#10131A",
+        "keyBackground": "#202633",
+        "keyModifierBackground": "#171B24",
+        "keyText": "#F4F7FF",
+        "keyAccent": "#78A9FF",
+        "suggestionBackground": "#10131A",
+        "suggestionText": "#F4F7FF",
+        "gestureTrail": "#C792EA"
+      }
+    }
+  ]
+}
+```
+
+Theme IDs must start with `custom_`; colors accept `#RRGGBB` or `#AARRGGBB`.
+Layout IDs must start with `custom_layout_`. A layout contains `name` and
+`rows`, where every key has a `label`, optional `width` (0.25–5), optional
+single-character `popup` array, and either the default `character` action or
+one of: `shift`, `delete`, `enter`, `space`, `symbols`, `clipboard`, `comma`,
+`period`, `emoji`, `settings`, or `spacer`. Layouts allow 3–6 rows, 2–16 keys
+per row, and 64 keys total; character labels must be unique, and exactly one
+Shift, Delete, Enter, Space, and Symbols action is required. Raw numeric key
+codes and unsupported actions are rejected.
 
 ## Emoji Picker
 
@@ -174,7 +215,7 @@ Applied at space, enter, and punctuation boundaries when enabled:
 ## Privacy & Security
 
 - **Zero cloud dependency** — No network requests, no account required
-- **Encrypted at rest** — Clipboard history, snippets, learned words, local usage data, per-app profiles, emoji history, settings, and custom themes use AES-256 encrypted preferences
+- **Encrypted at rest** — Clipboard history, snippets, learned words, local usage data, per-app profiles, emoji history, settings, custom themes, and custom layouts use AES-256 encrypted preferences
 - **No device backup** — Android cloud backup and device-transfer extraction are disabled for OpenSwift data
 - **Open source** — MIT licensed; code is auditable
 - **No telemetry** — No analytics, no crash reporting, no ads

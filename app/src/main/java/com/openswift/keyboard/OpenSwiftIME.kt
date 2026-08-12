@@ -23,9 +23,11 @@ import com.openswift.keyboard.engine.LanguageDetector
 import com.openswift.keyboard.engine.TextTokenPolicy
 import com.openswift.keyboard.engine.WordCommitPolicy
 import com.openswift.keyboard.layout.KeyCode as KC
+import com.openswift.keyboard.layout.CustomLayoutStore
 import com.openswift.keyboard.layout.Layouts
 import com.openswift.keyboard.privacy.InputPrivacyPolicy
 import com.openswift.keyboard.theme.Themes
+import com.openswift.keyboard.theme.ThemeEditor
 import com.openswift.keyboard.view.KeyboardView
 import com.openswift.keyboard.ui.EmojiView
 import com.openswift.keyboard.ui.MainActivity
@@ -40,6 +42,8 @@ class OpenSwiftIME : InputMethodService() {
     private lateinit var languageDetector: LanguageDetector
     private lateinit var snippets: SnippetManager
     private lateinit var perAppSettings: PerAppSettings
+    private lateinit var customLayouts: CustomLayoutStore
+    private lateinit var themeEditor: ThemeEditor
     private lateinit var keyboardView: KeyboardView
     private lateinit var emojiView: EmojiView
     private lateinit var clipboardView: com.openswift.keyboard.ui.ClipboardView
@@ -67,6 +71,8 @@ class OpenSwiftIME : InputMethodService() {
     override fun onCreate() {
         super.onCreate()
         settings = Settings(this)
+        customLayouts = CustomLayoutStore(this)
+        themeEditor = ThemeEditor(this)
         clipboard = ClipboardHistory(this)
         predictor = MultilingualPredictor(this)
         languageDetector = LanguageDetector(predictor.supportedLanguages()) { language, word ->
@@ -80,8 +86,16 @@ class OpenSwiftIME : InputMethodService() {
 
     override fun onCreateInputView(): View {
         refreshLanguageState()
-        currentLayout = Layouts.byId(settings.layout)
-        keyboardView = KeyboardView(this, settings, wordList, userDict, currentLayout)
+        currentLayout = resolveLayout(settings.layout)
+        val activeTheme = themeEditor.resolve(settings.theme)
+        keyboardView = KeyboardView(
+            this,
+            settings,
+            wordList,
+            userDict,
+            currentLayout,
+            theme = activeTheme,
+        )
         applyInputProfile()
         keyboardView.setOnKeyListener { code, label ->
             onKeyPressed(code, label)
@@ -90,7 +104,7 @@ class OpenSwiftIME : InputMethodService() {
             commitWord(word)
             snippetBuffer.clear()
         }
-        keyboardInputView = withNavigationBarInset(keyboardView, Themes.byId(settings.theme).background)
+        keyboardInputView = withNavigationBarInset(keyboardView, activeTheme.background)
         
         emojiView = EmojiView(this)
         emojiView.onEmojiSelected = { emoji ->
@@ -196,7 +210,7 @@ class OpenSwiftIME : InputMethodService() {
             KC.ABC -> {
                 symbolsActive = false
                 numberRowShown = false
-                currentLayout = Layouts.byId(settings.layout)
+                currentLayout = resolveLayout(settings.layout)
                 keyboardView.updateLayout(currentLayout)
             }
             KC.SHIFT_SYMBOLS -> {
@@ -337,7 +351,7 @@ class OpenSwiftIME : InputMethodService() {
         wordList = predictor.wordList(language.code)
         userDict = predictor.userDictionary(language.code)
         if (!symbolsActive) {
-            currentLayout = Layouts.byId(settings.layout)
+            currentLayout = resolveLayout(settings.layout)
         }
         if (::keyboardView.isInitialized) {
             keyboardView.updateDictionary(wordList, userDict)
@@ -356,6 +370,8 @@ class OpenSwiftIME : InputMethodService() {
         settings.language = detected.languageCode
         refreshLanguageState()
     }
+
+    private fun resolveLayout(id: String) = customLayouts.load(id)?.layout ?: Layouts.byId(id)
 
     private fun rememberLanguageToken(word: String) {
         val token = word.lowercase().filter { it.isLetter() || it == '¡' || it == '¿' }

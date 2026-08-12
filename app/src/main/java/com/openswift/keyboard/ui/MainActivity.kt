@@ -20,11 +20,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
+import com.openswift.keyboard.data.CustomizationPackageException
+import com.openswift.keyboard.data.CustomizationPackageManager
+import com.openswift.keyboard.data.CustomizationPackageParser
 import com.openswift.keyboard.data.DataPortability
 import com.openswift.keyboard.data.KeyboardLanguages
 import com.openswift.keyboard.data.PerAppSettings
 import com.openswift.keyboard.engine.UserDictionary
-import com.openswift.keyboard.theme.Themes
+import com.openswift.keyboard.layout.CustomLayoutStore
+import com.openswift.keyboard.theme.KbTheme
+import com.openswift.keyboard.theme.ThemeEditor
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 
 class MainActivity : AppCompatActivity() {
     private var pendingImportMode = DataPortability.ImportMode.MERGE
@@ -60,9 +68,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val importCustomization = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        runCatching {
+            CustomizationPackageManager(this).importJson(readCustomizationPackage(uri))
+        }.onSuccess {
+            toast(it.asMessage())
+            intent.putExtra(EXTRA_OPEN_SETTINGS, true)
+            recreate()
+        }.onFailure {
+            toast("Package import failed: ${it.message ?: "unknown error"}")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val initialPerAppPackage = intent.getStringExtra(EXTRA_PER_APP_PACKAGE).orEmpty()
+        val openSettings = intent.getBooleanExtra(EXTRA_OPEN_SETTINGS, false)
         setContent {
             val settings = Settings(this@MainActivity)
             MainUI(
@@ -77,7 +101,11 @@ class MainActivity : AppCompatActivity() {
                     pendingImportMode = DataPortability.ImportMode.REPLACE
                     importData.launch(arrayOf("application/json", "text/json", "*/*"))
                 },
+                onImportCustomization = {
+                    importCustomization.launch(arrayOf("application/json", "text/json", "*/*"))
+                },
                 initialPerAppPackage = initialPerAppPackage,
+                openSettings = openSettings,
             )
         }
     }
@@ -86,8 +114,36 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
+    private fun readCustomizationPackage(uri: android.net.Uri): String {
+        val input = contentResolver.openInputStream(uri)
+            ?: throw CustomizationPackageException("Unable to open the selected file.")
+        val bytes = input.use {
+            val result = ByteArrayOutputStream()
+            val buffer = ByteArray(8192)
+            while (true) {
+                val count = it.read(buffer)
+                if (count < 0) break
+                result.write(buffer, 0, count)
+                if (result.size() > CustomizationPackageParser.MAX_PACKAGE_BYTES) {
+                    throw CustomizationPackageException("The package is larger than 512 KiB.")
+                }
+            }
+            result.toByteArray()
+        }
+        return runCatching {
+            Charsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(bytes))
+                .toString()
+        }.getOrElse {
+            throw CustomizationPackageException("The package is not valid UTF-8 text.")
+        }
+    }
+
     companion object {
         const val EXTRA_PER_APP_PACKAGE = "com.openswift.keyboard.extra.PER_APP_PACKAGE"
+        private const val EXTRA_OPEN_SETTINGS = "com.openswift.keyboard.extra.OPEN_SETTINGS"
     }
 }
 
@@ -98,14 +154,19 @@ fun MainUI(
     onExportData: () -> Unit = {},
     onImportMerge: () -> Unit = {},
     onImportReplace: () -> Unit = {},
+    onImportCustomization: () -> Unit = {},
     initialPerAppPackage: String = "",
+    openSettings: Boolean = false,
 ) {
-    var activeTab by remember(initialPerAppPackage) {
-        mutableStateOf(if (initialPerAppPackage.isBlank()) 0 else 1)
+    var activeTab by remember(initialPerAppPackage, openSettings) {
+        mutableStateOf(if (openSettings || initialPerAppPackage.isNotBlank()) 1 else 0)
     }
     val perAppSettings = remember(context) { PerAppSettings(context) }
+    val themeEditor = remember(context) { ThemeEditor(context) }
+    val availableThemes = remember(themeEditor) { themeEditor.listThemes() }
+    val customLayouts = remember(context) { CustomLayoutStore(context).list() }
     
-    val theme = Themes.byId(settings.theme)
+    val theme = themeEditor.resolve(settings.theme)
     val bgColor = Color(theme.background)
     val keyBgColor = Color(theme.keyBackground)
     val textColor = Color(theme.keyText)
@@ -134,8 +195,11 @@ fun MainUI(
                     onExportData,
                     onImportMerge,
                     onImportReplace,
+                    onImportCustomization,
                     perAppSettings,
                     initialPerAppPackage,
+                    availableThemes,
+                    customLayouts.map { it.id to it.name },
                 )
                 2 -> PrivacyUI(
                     ClipboardHistory(context),
@@ -203,9 +267,13 @@ fun EnhancedSettingsUI(
     onExportData: () -> Unit = {},
     onImportMerge: () -> Unit = {},
     onImportReplace: () -> Unit = {},
+    onImportCustomization: () -> Unit = {},
     perAppSettings: PerAppSettings,
     initialPerAppPackage: String = "",
+    availableThemes: List<KbTheme>,
+    customLayoutOptions: List<Pair<String, String>>,
 ) {
+    var selectedThemeId by remember { mutableStateOf(settings.theme) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -228,8 +296,12 @@ fun EnhancedSettingsUI(
             accentColor = accentColor
         ) {
             ColorCustomizer(
-                currentThemeId = settings.theme,
-                onThemeChange = { settings.theme = it },
+                currentThemeId = selectedThemeId,
+                onThemeChange = {
+                    settings.theme = it
+                    selectedThemeId = it
+                },
+                themes = availableThemes,
                 bgColor = bgColor,
                 textColor = textColor,
                 accentColor = accentColor,
@@ -246,7 +318,13 @@ fun EnhancedSettingsUI(
             SettingsList(
                 listOf(
                     "Language" to KeyboardLanguages.all.map { it.code to it.name },
-                    "Layout" to listOf("qwerty" to "QWERTY", "qwertz" to "QWERTZ", "azerty" to "AZERTY"),
+                    "Layout" to (
+                        listOf(
+                            "qwerty" to "QWERTY",
+                            "qwertz" to "QWERTZ",
+                            "azerty" to "AZERTY",
+                        ) + customLayoutOptions
+                    ),
                     "Height" to emptyList()
                 ),
                 settings,
@@ -261,10 +339,10 @@ fun EnhancedSettingsUI(
             textColor = textColor,
             accentColor = accentColor
         ) {
-            ToggleOption("Glide Typing", settings.glideEnabled) { settings.glideEnabled = it }
-            ToggleOption("Auto-Correct", settings.autoCorrect) { settings.autoCorrect = it }
-            ToggleOption("Detect Language", settings.languageDetection) { settings.languageDetection = it }
-            ToggleOption("Auto-Capitalize", settings.autoCapitalize) { settings.autoCapitalize = it }
+            ToggleOption("Glide Typing", settings.glideEnabled, textColor) { settings.glideEnabled = it }
+            ToggleOption("Auto-Correct", settings.autoCorrect, textColor) { settings.autoCorrect = it }
+            ToggleOption("Detect Language", settings.languageDetection, textColor) { settings.languageDetection = it }
+            ToggleOption("Auto-Capitalize", settings.autoCapitalize, textColor) { settings.autoCapitalize = it }
         }
 
         // Feedback
@@ -273,8 +351,8 @@ fun EnhancedSettingsUI(
             textColor = textColor,
             accentColor = accentColor
         ) {
-            ToggleOption("Haptic Feedback", settings.hapticFeedback) { settings.hapticFeedback = it }
-            ToggleOption("Sound Effects", settings.soundFeedback) { settings.soundFeedback = it }
+            ToggleOption("Haptic Feedback", settings.hapticFeedback, textColor) { settings.hapticFeedback = it }
+            ToggleOption("Sound Effects", settings.soundFeedback, textColor) { settings.soundFeedback = it }
         }
 
         // Accessibility
@@ -283,7 +361,7 @@ fun EnhancedSettingsUI(
             textColor = textColor,
             accentColor = accentColor
         ) {
-            ToggleOption("Reduce Motion", settings.reducedMotion) { settings.reducedMotion = it }
+            ToggleOption("Reduce Motion", settings.reducedMotion, textColor) { settings.reducedMotion = it }
         }
 
         // Advanced
@@ -292,18 +370,20 @@ fun EnhancedSettingsUI(
             textColor = textColor,
             accentColor = accentColor
         ) {
-            ToggleOption("Power Saving Mode", settings.powerSaveMode) { settings.powerSaveMode = it }
-            ToggleOption("Clipboard History", settings.clipboardEnabled) { settings.clipboardEnabled = it }
-            ToggleOption("Per-App Tint", settings.perAppTint) { settings.perAppTint = it }
-            ToggleOption("Incognito Mode", settings.incognitoMode) { settings.incognitoMode = it }
+            ToggleOption("Power Saving Mode", settings.powerSaveMode, textColor) { settings.powerSaveMode = it }
+            ToggleOption("Clipboard History", settings.clipboardEnabled, textColor) { settings.clipboardEnabled = it }
+            ToggleOption("Per-App Tint", settings.perAppTint, textColor) { settings.perAppTint = it }
+            ToggleOption("Incognito Mode", settings.incognitoMode, textColor) { settings.incognitoMode = it }
             PerAppProfilesUI(
                 profilesStore = perAppSettings,
                 initialPackageName = initialPerAppPackage,
                 textColor = textColor,
                 accentColor = accentColor,
             )
+            CustomizationPackageActions(onImportCustomization, textColor)
             DataPortabilityActions(
                 accentColor = accentColor,
+                textColor = textColor,
                 onExportData = onExportData,
                 onImportMerge = onImportMerge,
                 onImportReplace = onImportReplace
@@ -315,8 +395,32 @@ fun EnhancedSettingsUI(
 }
 
 @Composable
+fun CustomizationPackageActions(onImportCustomization: () -> Unit, textColor: Color) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        Text(
+            "Customization Packages",
+            style = AppTypography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = textColor,
+        )
+        Text(
+            "Import a validated OpenSwift JSON package containing custom themes or keyboard layouts.",
+            style = AppTypography.bodySmall,
+            color = textColor.copy(alpha = Alphas.secondary),
+        )
+        OutlinedButton(onClick = onImportCustomization) {
+            Text("Import theme/layout package")
+        }
+    }
+}
+
+@Composable
 fun DataPortabilityActions(
     accentColor: Color,
+    textColor: Color,
     onExportData: () -> Unit,
     onImportMerge: () -> Unit,
     onImportReplace: () -> Unit
@@ -328,7 +432,7 @@ fun DataPortabilityActions(
         Text(
             "Data Portability",
             style = AppTypography.bodyMedium,
-            color = LocalContentColor.current,
+            color = textColor,
             fontWeight = FontWeight.Bold
         )
         Row(
@@ -434,7 +538,12 @@ fun SettingsList(
 }
 
 @Composable
-fun ToggleOption(label: String, value: Boolean, onToggle: (Boolean) -> Unit) {
+fun ToggleOption(
+    label: String,
+    value: Boolean,
+    textColor: Color,
+    onToggle: (Boolean) -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -445,7 +554,7 @@ fun ToggleOption(label: String, value: Boolean, onToggle: (Boolean) -> Unit) {
         Text(
             label,
             style = AppTypography.bodyMedium,
-            color = LocalContentColor.current,
+            color = textColor,
             modifier = Modifier.weight(1f)
         )
         Switch(

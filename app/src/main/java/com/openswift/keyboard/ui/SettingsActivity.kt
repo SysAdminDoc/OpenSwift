@@ -43,7 +43,7 @@ fun SettingsUI(
     themeEditor: ThemeEditor,
     snippets: SnippetManager
 ) {
-    val theme = Themes.byId(settings.theme)
+    val theme = themeEditor.resolve(settings.theme)
     val bgColor = ComposeColor(theme.background)
     val keyBgColor = ComposeColor(theme.keyBackground)
     val textColor = ComposeColor(theme.keyText)

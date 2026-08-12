@@ -61,6 +61,26 @@ class ThemeEditor(ctx: Context) {
         prefs.edit().putString(theme.id, json.toString()).apply()
     }
 
+    fun saveImported(theme: KbTheme) {
+        require(theme.id.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX)) {
+            "Imported theme ids must start with ${TypedDataStores.CUSTOM_THEME_PREFIX}"
+        }
+        save(
+            CustomTheme(
+                id = theme.id,
+                name = theme.name,
+                background = theme.background,
+                keyBackground = theme.keyBackground,
+                keyModifierBackground = theme.keyModifierBackground,
+                keyText = theme.keyText,
+                keyAccent = theme.keyAccent,
+                suggestionBg = theme.suggestionBg,
+                suggestionText = theme.suggestionText,
+                gestureTrail = theme.gestureTrail,
+            ),
+        )
+    }
+
     fun load(id: String): CustomTheme? {
         val raw = prefs.getString(id, null) ?: return null
         return runCatching {
@@ -82,10 +102,27 @@ class ThemeEditor(ctx: Context) {
 
     fun listCustom(): List<CustomTheme> {
         val all = prefs.all.keys.filter { it.startsWith(TypedDataStores.CUSTOM_THEME_PREFIX) }
-        return all.mapNotNull { load(it) }
+        return all.sorted().mapNotNull { load(it) }
     }
+
+    fun listThemes(): List<KbTheme> = Themes.all + listCustom().map { it.asKeyboardTheme() }
+
+    fun resolve(id: String): KbTheme = load(id)?.asKeyboardTheme() ?: Themes.byId(id)
 
     fun delete(id: String) {
         prefs.edit().remove(id).apply()
     }
+
+    private fun CustomTheme.asKeyboardTheme(): KbTheme = KbTheme(
+        id = id,
+        name = name,
+        background = background,
+        keyBackground = keyBackground,
+        keyModifierBackground = keyModifierBackground,
+        keyText = keyText,
+        keyAccent = keyAccent,
+        suggestionBg = suggestionBg,
+        suggestionText = suggestionText,
+        gestureTrail = gestureTrail,
+    )
 }
