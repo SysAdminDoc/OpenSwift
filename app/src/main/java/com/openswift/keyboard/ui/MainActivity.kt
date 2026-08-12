@@ -22,6 +22,7 @@ import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
 import com.openswift.keyboard.data.DataPortability
 import com.openswift.keyboard.data.KeyboardLanguages
+import com.openswift.keyboard.data.PerAppSettings
 import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.theme.Themes
 
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val initialPerAppPackage = intent.getStringExtra(EXTRA_PER_APP_PACKAGE).orEmpty()
         setContent {
             val settings = Settings(this@MainActivity)
             MainUI(
@@ -74,13 +76,18 @@ class MainActivity : AppCompatActivity() {
                 onImportReplace = {
                     pendingImportMode = DataPortability.ImportMode.REPLACE
                     importData.launch(arrayOf("application/json", "text/json", "*/*"))
-                }
+                },
+                initialPerAppPackage = initialPerAppPackage,
             )
         }
     }
 
     private fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    companion object {
+        const val EXTRA_PER_APP_PACKAGE = "com.openswift.keyboard.extra.PER_APP_PACKAGE"
     }
 }
 
@@ -90,9 +97,13 @@ fun MainUI(
     context: android.content.Context,
     onExportData: () -> Unit = {},
     onImportMerge: () -> Unit = {},
-    onImportReplace: () -> Unit = {}
+    onImportReplace: () -> Unit = {},
+    initialPerAppPackage: String = "",
 ) {
-    var activeTab by remember { mutableStateOf(0) }
+    var activeTab by remember(initialPerAppPackage) {
+        mutableStateOf(if (initialPerAppPackage.isBlank()) 0 else 1)
+    }
+    val perAppSettings = remember(context) { PerAppSettings(context) }
     
     val theme = Themes.byId(settings.theme)
     val bgColor = Color(theme.background)
@@ -105,6 +116,7 @@ fun MainUI(
         modifier = Modifier
             .fillMaxSize()
             .background(bgColor)
+            .safeDrawingPadding()
     ) {
         // Tab content
         Box(
@@ -121,7 +133,9 @@ fun MainUI(
                     accentColor,
                     onExportData,
                     onImportMerge,
-                    onImportReplace
+                    onImportReplace,
+                    perAppSettings,
+                    initialPerAppPackage,
                 )
                 2 -> PrivacyUI(
                     ClipboardHistory(context),
@@ -188,7 +202,9 @@ fun EnhancedSettingsUI(
     accentColor: Color,
     onExportData: () -> Unit = {},
     onImportMerge: () -> Unit = {},
-    onImportReplace: () -> Unit = {}
+    onImportReplace: () -> Unit = {},
+    perAppSettings: PerAppSettings,
+    initialPerAppPackage: String = "",
 ) {
     Column(
         modifier = Modifier
@@ -280,6 +296,12 @@ fun EnhancedSettingsUI(
             ToggleOption("Clipboard History", settings.clipboardEnabled) { settings.clipboardEnabled = it }
             ToggleOption("Per-App Tint", settings.perAppTint) { settings.perAppTint = it }
             ToggleOption("Incognito Mode", settings.incognitoMode) { settings.incognitoMode = it }
+            PerAppProfilesUI(
+                profilesStore = perAppSettings,
+                initialPackageName = initialPerAppPackage,
+                textColor = textColor,
+                accentColor = accentColor,
+            )
             DataPortabilityActions(
                 accentColor = accentColor,
                 onExportData = onExportData,

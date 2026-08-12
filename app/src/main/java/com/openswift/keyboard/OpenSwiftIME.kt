@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
 import com.openswift.keyboard.data.KeyboardLanguages
+import com.openswift.keyboard.data.PerAppSettings
 import com.openswift.keyboard.data.SnippetExpansionPolicy
 import com.openswift.keyboard.data.SnippetManager
 import com.openswift.keyboard.engine.WordList
@@ -27,6 +28,7 @@ import com.openswift.keyboard.privacy.InputPrivacyPolicy
 import com.openswift.keyboard.theme.Themes
 import com.openswift.keyboard.view.KeyboardView
 import com.openswift.keyboard.ui.EmojiView
+import com.openswift.keyboard.ui.MainActivity
 
 class OpenSwiftIME : InputMethodService() {
 
@@ -37,6 +39,7 @@ class OpenSwiftIME : InputMethodService() {
     private lateinit var predictor: MultilingualPredictor
     private lateinit var languageDetector: LanguageDetector
     private lateinit var snippets: SnippetManager
+    private lateinit var perAppSettings: PerAppSettings
     private lateinit var keyboardView: KeyboardView
     private lateinit var emojiView: EmojiView
     private lateinit var clipboardView: com.openswift.keyboard.ui.ClipboardView
@@ -59,6 +62,7 @@ class OpenSwiftIME : InputMethodService() {
     private val languageContext = ArrayDeque<String>()
     private var refreshingLanguage = false
     private var privacyModeActive = false
+    private var activeAppConfig = PerAppSettings.AppConfig("")
 
     override fun onCreate() {
         super.onCreate()
@@ -70,6 +74,7 @@ class OpenSwiftIME : InputMethodService() {
         }
         refreshLanguageState()
         snippets = SnippetManager(this)
+        perAppSettings = PerAppSettings(this)
         vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
     }
 
@@ -77,7 +82,7 @@ class OpenSwiftIME : InputMethodService() {
         refreshLanguageState()
         currentLayout = Layouts.byId(settings.layout)
         keyboardView = KeyboardView(this, settings, wordList, userDict, currentLayout)
-        keyboardView.setPredictionEnabled(!privacyModeActive)
+        applyInputProfile()
         keyboardView.setOnKeyListener { code, label ->
             onKeyPressed(code, label)
         }
@@ -123,14 +128,16 @@ class OpenSwiftIME : InputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         privacyModeActive = InputPrivacyPolicy.shouldUseIncognito(info, settings.incognitoMode)
+        activeAppConfig = info?.packageName
+            ?.takeIf { it.isNotBlank() }
+            ?.let(perAppSettings::getAppConfig)
+            ?: PerAppSettings.AppConfig("")
         clearInputBuffers()
         languageContext.clear()
         previousWord = ""
         snippets.reload()
         refreshLanguageState()
-        if (::keyboardView.isInitialized) {
-            keyboardView.setPredictionEnabled(!privacyModeActive)
-        }
+        applyInputProfile()
         clipboard.captureSystem(
             ctx = this,
             enabled = settings.clipboardEnabled,
@@ -202,7 +209,11 @@ class OpenSwiftIME : InputMethodService() {
             }
             KC.CLIPBOARD -> showClipboardView()
             KC.SETTINGS -> {
-                startActivity(android.content.Intent(this, com.openswift.keyboard.ui.MainActivity::class.java))
+                startActivity(
+                    android.content.Intent(this, MainActivity::class.java)
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .putExtra(MainActivity.EXTRA_PER_APP_PACKAGE, activeAppConfig.packageName),
+                )
             }
             KC.COMMA, KC.PERIOD -> {
                 val ch = label[0]
@@ -242,7 +253,7 @@ class OpenSwiftIME : InputMethodService() {
     private fun commitWord(word: String) {
         val ic = currentInputConnection ?: return
         val typedWord = currentWord.toString()
-        if (!privacyModeActive) {
+        if (learningEnabled()) {
             userDict.learn(previousWord.ifEmpty { null }, word)
             rememberLanguageToken(word)
         }
@@ -252,14 +263,14 @@ class OpenSwiftIME : InputMethodService() {
         }
         plan.textToCommit?.let { ic.commitText(it, 1) }
         currentWord.clear()
-        previousWord = if (privacyModeActive) "" else word
+        previousWord = if (learningEnabled()) word else ""
         shiftActive = false
         keyboardView.setShift(false)
     }
 
     private fun correctedCurrentWord(): String {
         val typedWord = currentWord.toString()
-        if (privacyModeActive || !settings.autoCorrect) return typedWord
+        if (!predictionsEnabled() || !settings.autoCorrect) return typedWord
         detectLanguageForCurrentContext(typedWord)
         return predictor.autoCorrect(activeLanguageCode, typedWord, previousWord)
     }
@@ -299,7 +310,7 @@ class OpenSwiftIME : InputMethodService() {
     }
 
     private fun updateSuggestions() {
-        if (privacyModeActive) {
+        if (!predictionsEnabled()) {
             keyboardView.setSuggestions(emptyList())
             return
         }
@@ -391,7 +402,7 @@ class OpenSwiftIME : InputMethodService() {
 
     override fun onFinishInput() {
         super.onFinishInput()
-        if (currentWord.isNotEmpty() && !privacyModeActive) {
+        if (currentWord.isNotEmpty() && learningEnabled()) {
             detectLanguageForCurrentContext(currentWord.toString())
             userDict.learn(previousWord.ifEmpty { null }, currentWord.toString())
             rememberLanguageToken(currentWord.toString())
@@ -400,6 +411,25 @@ class OpenSwiftIME : InputMethodService() {
         clearInputBuffers()
         languageContext.clear()
         previousWord = ""
+    }
+
+    private fun predictionsEnabled(): Boolean =
+        !privacyModeActive && !activeAppConfig.predictionsDisabled
+
+    private fun learningEnabled(): Boolean = predictionsEnabled()
+
+    private fun applyInputProfile() {
+        if (!::keyboardView.isInitialized) return
+        val effective = PerAppSettings.resolve(
+            activeAppConfig,
+            globalGlideEnabled = settings.glideEnabled,
+            globalKeyHeightDp = settings.keyHeightDp,
+        )
+        keyboardView.setInputProfile(
+            predictionsEnabled = !privacyModeActive && effective.predictionsEnabled,
+            glideEnabled = !privacyModeActive && effective.glideEnabled,
+            keyHeightDp = effective.keyHeightDp,
+        )
     }
 
     companion object {

@@ -32,6 +32,8 @@ class KeyboardView(
     private var suggestions: List<String> = emptyList()
     private var shiftActive = false
     private var predictionEnabled = true
+    private var glideEnabled = settings.glideEnabled
+    private var keyHeightDp = settings.keyHeightDp
     private var glideDecoder = GlideDecoder(wordList, userDict)
     
     // Compute layout with number row if enabled
@@ -127,7 +129,7 @@ class KeyboardView(
         val density = resources.displayMetrics.density
         
         // Mirror the drawing path exactly so the final row is never clipped.
-        val keyHeightPx = settings.keyHeightDp * density
+        val keyHeightPx = keyHeightDp * density
         val numRows = effectiveLayout.rows.size // includes number row if enabled
         val rowSpacingPx = 2f * density
         val suggestionHeight = if (predictionEnabled) {
@@ -150,7 +152,7 @@ class KeyboardView(
         val density = resources.displayMetrics.density
         
         // Calculate key height in pixels
-        val keyHeightPx = (settings.keyHeightDp * density)
+        val keyHeightPx = keyHeightDp * density
         val suggestionHeightPx = keyHeightPx * 1.2f
         val rowSpacingPx = 2f * density // small gap between rows
         
@@ -337,7 +339,7 @@ class KeyboardView(
             }
             MotionEvent.ACTION_MOVE -> {
                 val elapsed = System.currentTimeMillis() - glideStartTime
-                if (!isGliding && elapsed > 80L && settings.glideEnabled && predictionEnabled) {
+                if (!isGliding && elapsed > 80L && glideEnabled) {
                     isGliding = true
                 }
                 if (isGliding) {
@@ -424,11 +426,30 @@ class KeyboardView(
         if (!enabled) {
             suggestions = emptyList()
             suggestionBounds.clear()
+        }
+        requestLayout()
+        invalidate()
+    }
+
+    fun setInputProfile(predictionsEnabled: Boolean, glideEnabled: Boolean, keyHeightDp: Int) {
+        setPredictionEnabled(predictionsEnabled)
+        if (this.glideEnabled != glideEnabled) {
+            this.glideEnabled = glideEnabled
+            if (!glideEnabled) {
+                isGliding = false
+                glideSamples.clear()
+                glideTrail.clear()
+            }
+        }
+        if (this.keyHeightDp != keyHeightDp) {
+            this.keyHeightDp = keyHeightDp
+            requestLayout()
+        }
+        if (!predictionsEnabled && !glideEnabled) {
             isGliding = false
             glideSamples.clear()
             glideTrail.clear()
         }
-        requestLayout()
         invalidate()
     }
 

@@ -29,7 +29,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Accessibility** — Full TalkBack support, key announcements, navigation support, reduced motion mode (v0.3+)
 - **Privacy Dashboard** — View clipboard history, dictionary stats, and delete all data (v0.3+)
 - **Sensitive-Field Privacy** — Password, private, and no-suggestions fields automatically disable prediction, glide decoding, learning, snippets, and clipboard capture
-- **Per-App Settings** — Customize behavior per application (disable glide in games, adjust key height for email, etc.)
+- **Per-App Profiles** — Disable predictions/learning or glide and override key height for individual applications without changing global settings
 - **Haptic & Sound Feedback** — Customizable vibration (20ms default) and optional audio cues
 
 ## Architecture
@@ -108,6 +108,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Key Height** — Adjust keyboard size (48–72 dp)
 - **Clipboard History** — Opt in to encrypted clipboard capture; Android-marked sensitive clips and private fields are always skipped
 - **Snippets** — Manage case-insensitive triggers and multiline replacements; expansion is always disabled in private fields
+- **Per-App Profiles** — Tap the keyboard settings key inside an app to prefill its package name, then save prediction, glide, or key-height overrides; reset one profile or all profiles at any time
 - **Data Portability** — Export a JSON backup, merge imported data, or replace local learned words/snippets/custom themes
 - **Incognito Mode** — Disable prediction history, learning, snippets, and clipboard capture for every field
 
