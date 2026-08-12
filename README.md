@@ -49,13 +49,36 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 ./gradlew assembleRelease
 ```
 
-Output: `app/build/outputs/apk/release/app-release.apk`
+Without release-signing environment variables, the build produces
+`app/build/outputs/apk/release/app-release-unsigned.apk`. When all four
+`RELEASE_KEYSTORE_PATH`, `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, and
+`RELEASE_KEY_PASSWORD` values are present, it produces the signed
+`app-release.apk` instead.
 
 Run local checks:
 
 ```bash
-./gradlew testDebugUnitTest
+./gradlew testDebugUnitTest lintDebug assembleDebug checkReleaseApkSize
 ```
+
+`checkReleaseApkSize` builds the minified release, writes
+`app/build/reports/apk-size/release.txt`, and fails if the compressed APK exceeds
+15 MiB.
+
+### Dependency and size review
+
+The August 2026 release review replaced the all-icons Compose artifact with the
+scoped core icon set and moved AndroidX Security Crypto from `1.1.0-alpha06` to
+the stable `1.1.0` release. A clean debug APK dropped from 18,916,086 to
+11,429,700 bytes (39.6%); the R8-minified release remained effectively flat at
+1,820,678 bytes (1.74 MiB, up 62 bytes across both dependency changes).
+
+The Compose BOM remains pinned at `2024.10.01` and AGP at `8.7.2` with Gradle
+`8.10.2`. They were reviewed against the current
+[Compose](https://developer.android.com/jetpack/androidx/releases/compose) and
+[AGP](https://developer.android.com/build/releases/gradle-plugin) release notes;
+an AGP 9/Kotlin toolchain migration is intentionally kept separate from this
+release-size guardrail.
 
 ## Installation
 
