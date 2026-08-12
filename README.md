@@ -21,7 +21,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
 - **Data Portability** — Export/import encrypted-at-rest learned words, snippets, and custom themes with merge or replace behavior
 - **Clipboard Manager** — Opt-in history of 25 recent items with sensitive-clip filtering, a dedicated keyboard panel, per-item delete, and clear-all
-- **Snippets/Text Expansion** — Create custom trigger→expansion pairs for instant text insertion
+- **Snippets/Text Expansion** — Create, edit, and delete validated trigger→expansion pairs; type a trigger followed by space, enter, or punctuation to replace it
 - **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
 - **Voice Input** — Speech recognition with partial result streaming (v0.2+)
 - **Number Row** — Dedicated digit row for quick number entry (v0.2+)
@@ -84,6 +84,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Sound Feedback** — Optional audio cues
 - **Key Height** — Adjust keyboard size (48–72 dp)
 - **Clipboard History** — Opt in to encrypted clipboard capture; Android-marked sensitive clips and private fields are always skipped
+- **Snippets** — Manage case-insensitive triggers and multiline replacements; expansion is always disabled in private fields
 - **Data Portability** — Export a JSON backup, merge imported data, or replace local learned words/snippets/custom themes
 - **Incognito Mode** — Disable prediction history, learning, snippets, and clipboard capture for every field
 

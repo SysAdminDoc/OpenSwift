@@ -1,6 +1,5 @@
 package com.openswift.keyboard.ui
 
-import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,12 +56,13 @@ fun SettingsUI(
         modifier = Modifier
             .fillMaxSize()
             .background(bgColor)
+            .safeDrawingPadding()
     ) {
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = SemanticColors.getSubtleAccent(accentColor, true),
             contentColor = accentColor,
-            divider = { Divider(color = accentColor.copy(alpha = Alphas.divider)) }
+            divider = { HorizontalDivider(color = accentColor.copy(alpha = Alphas.divider)) }
         ) {
             tabs.forEachIndexed { idx, label ->
                 Tab(
@@ -217,25 +218,58 @@ fun ThemesTab(settings: Settings, themeEditor: ThemeEditor, textColor: ComposeCo
 }
 
 @Composable
-fun SnippetsTab(snippets: SnippetManager, textColor: ComposeColor, accentColor: ComposeColor) {
+fun SnippetsTab(
+    snippets: SnippetManager,
+    textColor: ComposeColor,
+    accentColor: ComposeColor,
+    initialEditorOpen: Boolean = false
+) {
+    var allSnippets by remember { mutableStateOf(snippets.getAll()) }
+    var editorOpen by remember { mutableStateOf(initialEditorOpen) }
+    var editingSnippet by remember { mutableStateOf<SnippetManager.Snippet?>(null) }
+    var trigger by remember { mutableStateOf("") }
+    var replacement by remember { mutableStateOf("") }
+    var validationError by remember { mutableStateOf<String?>(null) }
+
+    fun openEditor(snippet: SnippetManager.Snippet? = null) {
+        editingSnippet = snippet
+        trigger = snippet?.trigger.orEmpty()
+        replacement = snippet?.text.orEmpty()
+        validationError = null
+        editorOpen = true
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.lg)
     ) {
-        Text(
-            "Text Snippets",
-            style = AppTypography.headlineSmall,
-            color = textColor
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Text Snippets",
+                style = AppTypography.headlineSmall,
+                color = textColor
+            )
+            Button(
+                onClick = { openEditor() },
+                shape = Shapes.md
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(Modifier.width(Spacing.sm))
+                Text("Create", style = AppTypography.labelLarge)
+            }
+        }
 
         Text(
-            "Quick replacements for common phrases",
+            "Type a trigger followed by space, enter, or punctuation to replace it.",
             style = AppTypography.bodySmall,
             color = textColor.copy(alpha = Alphas.secondary),
             modifier = Modifier.padding(bottom = Spacing.md)
         )
 
-        val allSnippets = remember { snippets.getAll() }
         if (allSnippets.isEmpty()) {
             Card(
                 modifier = Modifier
@@ -259,7 +293,7 @@ fun SnippetsTab(snippets: SnippetManager, textColor: ComposeColor, accentColor: 
                         modifier = Modifier.padding(bottom = Spacing.md)
                     )
                     Button(
-                        onClick = { /* Open snippet manager */ },
+                        onClick = { openEditor() },
                         shape = Shapes.md
                     ) {
                         Text("Create Snippet", style = AppTypography.labelLarge)
@@ -285,18 +319,109 @@ fun SnippetsTab(snippets: SnippetManager, textColor: ComposeColor, accentColor: 
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(snippet.trigger, style = AppTypography.labelLarge, color = accentColor)
-                            Text(snippet.text.take(40), style = AppTypography.bodySmall, color = textColor.copy(alpha = 0.8f))
+                            Text(
+                                snippet.text.replace("\n", " ").take(80),
+                                style = AppTypography.bodySmall,
+                                color = textColor.copy(alpha = 0.8f)
+                            )
                         }
                         IconButton(
-                            onClick = { snippets.remove(snippet.trigger) },
+                            onClick = { openEditor(snippet) },
                             modifier = Modifier.size(40.dp)
                         ) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = accentColor)
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit ${snippet.trigger}",
+                                tint = accentColor
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                snippets.remove(snippet.trigger)
+                                allSnippets = snippets.getAll()
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete ${snippet.trigger}",
+                                tint = accentColor
+                            )
                         }
                     }
                 }
             }
         }
+    }
+
+    if (editorOpen) {
+        AlertDialog(
+            onDismissRequest = { editorOpen = false },
+            title = {
+                Text(if (editingSnippet == null) "Create snippet" else "Edit snippet")
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    OutlinedTextField(
+                        value = trigger,
+                        onValueChange = {
+                            trigger = it
+                            validationError = null
+                        },
+                        label = { Text("Trigger") },
+                        supportingText = {
+                            Text("No spaces; ${SnippetManager.MAX_TRIGGER_LENGTH} characters maximum.")
+                        },
+                        isError = validationError != null,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = replacement,
+                        onValueChange = {
+                            replacement = it
+                            validationError = null
+                        },
+                        label = { Text("Replacement text") },
+                        isError = validationError != null,
+                        minLines = 3,
+                        maxLines = 8,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    validationError?.let { message ->
+                        Text(
+                            message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = AppTypography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val error = snippets.save(
+                            originalTrigger = editingSnippet?.trigger,
+                            trigger = trigger,
+                            text = replacement
+                        )
+                        if (error == null) {
+                            allSnippets = snippets.getAll()
+                            editorOpen = false
+                        } else {
+                            validationError = error
+                        }
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editorOpen = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
