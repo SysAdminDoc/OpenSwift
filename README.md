@@ -19,7 +19,8 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
 - **Custom Packages** — Import validated, encrypted-at-rest JSON packages containing custom themes or keyboard layouts
 - **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
-- **Data Portability** — Export/import encrypted-at-rest learned words, snippets, and custom themes with merge or replace behavior
+- **Data Portability** — Export/import learned words, snippets, and custom themes with merge or replace behavior
+- **Encrypted Sync Snapshots** — Save or open passphrase-encrypted `.oswsync` documents through an Android document provider; nothing syncs automatically
 - **Clipboard Manager** — Opt-in history of 25 recent items with sensitive-clip filtering, a dedicated keyboard panel, per-item delete, and clear-all
 - **Snippets/Text Expansion** — Create, edit, and delete validated trigger→expansion pairs; type a trigger followed by space, enter, or punctuation to replace it
 - **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
@@ -40,7 +41,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - `GlideDecoder` — Polyline-to-word decoding using anchored key subsequence matching
 - `WordList` + `UserDictionary` — Frequency-based per-language word stores + per-user bigram learning
 - `Settings` + `ClipboardHistory` — Persistent user preferences and clipboard state
-- `DataPortability` — Local JSON export/import for learned words, snippets, and custom themes
+- `DataPortability` + `EncryptedSyncSnapshot` — Local JSON portability with optional authenticated encrypted documents
 - `Themes` + `Layouts` — 10 built-in themes and 3 keyboard layouts with language defaults
 - `EncryptedSyncCodec` + `PluginRegistry` — Feature-gated, contract-tested boundaries for authenticated sync envelopes and in-process extensions
 
@@ -112,6 +113,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 - **Per-App Profiles** — Tap the keyboard settings key inside an app to prefill its package name, then save prediction, glide, or key-height overrides; reset one profile or all profiles at any time
 - **Customization Packages** — Import a versioned JSON theme/layout package; invalid files report the exact field or keyboard action that needs correction
 - **Data Portability** — Export a JSON backup, merge imported data, or replace local learned words/snippets/custom themes
+- **Encrypted Sync Snapshots** — Export with a confirmed 12+ character passphrase, then merge or replace from a `.oswsync` document; OpenSwift never stores the passphrase
 - **Incognito Mode** — Disable prediction history, learning, snippets, and clipboard capture for every field
 
 ## Customization Package Format
@@ -224,14 +226,19 @@ Applied at space, enter, and punctuation boundaries when enabled:
 - **Device learns** — User bigrams and word frequencies stay on-device
 - **Clipboard history** — Off by default, bounded to 25 unique non-empty items, and cleared on uninstall
 
-### Experimental extension boundaries
+### Sync and extension boundaries
 
-Published builds compile both `ENABLE_EXPERIMENTAL_SYNC` and
-`ENABLE_EXPERIMENTAL_PLUGINS` as `false`, so neither surface is reachable from
-settings or the IME. The sync boundary only accepts dictionary, snippet, and
-theme payloads; transports receive versioned AES-256-GCM envelopes whose keys
-are derived from non-persisted passphrases. Per-app metadata and analytics are
-not part of the contract.
+Encrypted Sync Snapshots run only after a user chooses Export, Merge, or
+Replace and selects a destination through Android's document picker. OpenSwift
+has no network permission, account, background-sync job, or stored passphrase.
+Snapshots contain only learned dictionaries, snippets, and custom themes in a
+versioned AES-256-GCM envelope with a PBKDF2-HMAC-SHA256 passphrase key.
+Per-app metadata and analytics are not part of the contract.
+
+The future transport client and runtime plugin registry remain compile-time
+disabled in published builds through `ENABLE_EXPERIMENTAL_SYNC` and
+`ENABLE_EXPERIMENTAL_PLUGINS`. Any future sync transport can receive only
+authenticated ciphertext, never plaintext or key material.
 
 Plugin API v1 supports prediction, theme, and layout capabilities for explicitly
 registered in-process extensions. It deliberately provides no APK loading,

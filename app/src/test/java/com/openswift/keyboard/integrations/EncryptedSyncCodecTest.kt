@@ -6,6 +6,7 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -62,6 +63,16 @@ class EncryptedSyncCodecTest {
     }
 
     @Test
+    fun passphraseLengthIsBounded() {
+        assertThrows(IllegalArgumentException::class.java) {
+            codec.encrypt(byteArrayOf(1), CharArray(EncryptedSyncCodec.MIN_PASSPHRASE_CHARACTERS - 1))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            codec.encrypt(byteArrayOf(1), CharArray(EncryptedSyncCodec.MAX_PASSPHRASE_CHARACTERS + 1))
+        }
+    }
+
+    @Test
     fun productionSyncEntryPointIsCompileTimeDisabledAndDoesNotReachTransport() {
         val transport = RecordingTransport()
         val client = EncryptedSyncClient.create(transport)
@@ -83,6 +94,33 @@ class EncryptedSyncCodecTest {
         assertFalse(fields.any { it.contains("app", ignoreCase = true) })
         assertFalse(fields.any { it.contains("analytic", ignoreCase = true) })
         assertNotEquals(0, fields.size)
+    }
+
+    @Test
+    fun encryptedSnapshotRoundTripsUtf8Json() {
+        val snapshot = EncryptedSyncSnapshot(codec)
+        val passphrase = "correct horse battery".toCharArray()
+        val json = """{"schemaVersion":1,"snippets":[{"x":"café"}]}"""
+
+        val envelope = snapshot.encryptJson(json, passphrase)
+
+        assertEquals(json, snapshot.decryptJson(envelope, passphrase))
+        passphrase.fill('\u0000')
+        envelope.fill(0)
+    }
+
+    @Test
+    fun encryptedSnapshotRejectsMalformedUtf8() {
+        val passphrase = "correct horse battery".toCharArray()
+        val envelope = codec.encrypt(byteArrayOf(0xC3.toByte(), 0x28), passphrase)
+
+        val error = assertThrows(SyncCryptoException::class.java) {
+            EncryptedSyncSnapshot(codec).decryptJson(envelope, passphrase)
+        }
+
+        assertTrue(error.message.orEmpty().contains("UTF-8"))
+        passphrase.fill('\u0000')
+        envelope.fill(0)
     }
 
     private class RecordingTransport : EncryptedSyncTransport {

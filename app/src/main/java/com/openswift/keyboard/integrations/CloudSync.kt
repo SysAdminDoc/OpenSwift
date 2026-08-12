@@ -4,6 +4,7 @@ import com.openswift.keyboard.BuildConfig
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import javax.crypto.AEADBadTagException
@@ -161,8 +162,8 @@ class EncryptedSyncCodec internal constructor(
     }
 
     private fun requirePassphrase(passphrase: CharArray) {
-        require(passphrase.size >= MIN_PASSPHRASE_CHARACTERS) {
-            "Sync passphrase must contain at least $MIN_PASSPHRASE_CHARACTERS characters."
+        require(passphrase.size in MIN_PASSPHRASE_CHARACTERS..MAX_PASSPHRASE_CHARACTERS) {
+            "Sync passphrase must contain $MIN_PASSPHRASE_CHARACTERS-$MAX_PASSPHRASE_CHARACTERS characters."
         }
     }
 
@@ -193,6 +194,7 @@ class EncryptedSyncCodec internal constructor(
 
     companion object {
         const val MIN_PASSPHRASE_CHARACTERS = 12
+        const val MAX_PASSPHRASE_CHARACTERS = 256
         const val DEFAULT_PBKDF2_ITERATIONS = 600_000
         private const val MIN_PBKDF2_ITERATIONS = 100_000
         private const val MAX_PBKDF2_ITERATIONS = 1_000_000
@@ -207,6 +209,37 @@ class EncryptedSyncCodec internal constructor(
         private const val KDF_ALGORITHM = "PBKDF2WithHmacSHA256"
         private val MAGIC = byteArrayOf('O'.code.toByte(), 'S'.code.toByte(), 'W'.code.toByte(), 'S'.code.toByte(), 'Y'.code.toByte(), 'N'.code.toByte(), 'C'.code.toByte())
         private const val HEADER_BYTES = 7 + 1 + Int.SIZE_BYTES + 1 + 1 + Int.SIZE_BYTES
+        const val MAX_ENVELOPE_BYTES =
+            HEADER_BYTES + SALT_BYTES + NONCE_BYTES + MAX_PLAINTEXT_BYTES + TAG_BYTES
+    }
+}
+
+/** Converts portability JSON to and from encrypted sync envelopes without retaining key material. */
+class EncryptedSyncSnapshot internal constructor(
+    private val codec: EncryptedSyncCodec = EncryptedSyncCodec(),
+) {
+    fun encryptJson(json: String, passphrase: CharArray): ByteArray {
+        val plaintext = json.toByteArray(Charsets.UTF_8)
+        return try {
+            codec.encrypt(plaintext, passphrase)
+        } finally {
+            plaintext.fill(0)
+        }
+    }
+
+    fun decryptJson(envelope: ByteArray, passphrase: CharArray): String {
+        val plaintext = codec.decrypt(envelope, passphrase)
+        return try {
+            Charsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(plaintext))
+                .toString()
+        } catch (error: Exception) {
+            throw SyncCryptoException("Decrypted sync data is not valid UTF-8 text.", error)
+        } finally {
+            plaintext.fill(0)
+        }
     }
 }
 
