@@ -3,9 +3,13 @@ package com.openswift.keyboard
 import android.inputmethodservice.InputMethodService
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodSubtype
+import android.widget.FrameLayout
 import android.os.Vibrator
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.data.ClipboardHistory
 import com.openswift.keyboard.data.KeyboardLanguages
@@ -16,6 +20,7 @@ import com.openswift.keyboard.engine.LanguageDetector
 import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.layout.Layouts
 import com.openswift.keyboard.privacy.InputPrivacyPolicy
+import com.openswift.keyboard.theme.Themes
 import com.openswift.keyboard.view.KeyboardView
 import com.openswift.keyboard.ui.EmojiView
 
@@ -31,6 +36,9 @@ class OpenSwiftIME : InputMethodService() {
     private lateinit var keyboardView: KeyboardView
     private lateinit var emojiView: EmojiView
     private lateinit var clipboardView: com.openswift.keyboard.ui.ClipboardView
+    private lateinit var keyboardInputView: View
+    private lateinit var emojiInputView: View
+    private lateinit var clipboardInputView: View
     private lateinit var numberRowView: com.openswift.keyboard.view.NumberRowView
     private lateinit var vibrator: Vibrator
 
@@ -71,6 +79,7 @@ class OpenSwiftIME : InputMethodService() {
         keyboardView.setOnGlideListener { word ->
             commitWord(word)
         }
+        keyboardInputView = withNavigationBarInset(keyboardView, Themes.byId(settings.theme).background)
         
         emojiView = EmojiView(this)
         emojiView.onEmojiSelected = { emoji ->
@@ -78,6 +87,7 @@ class OpenSwiftIME : InputMethodService() {
             emojiMode = false
             showKeyboardView()
         }
+        emojiInputView = withNavigationBarInset(emojiView, Themes.Amoled.background)
 
         clipboardView = com.openswift.keyboard.ui.ClipboardView(this)
         clipboardView.onItemSelected = { item ->
@@ -88,13 +98,18 @@ class OpenSwiftIME : InputMethodService() {
         clipboardView.onItemDeleted = { _ ->
             clipboardView.refresh()
         }
+        clipboardView.onClose = {
+            clipboardMode = false
+            showKeyboardView()
+        }
+        clipboardInputView = withNavigationBarInset(clipboardView, Themes.Amoled.background)
 
         numberRowView = com.openswift.keyboard.view.NumberRowView(this)
         numberRowView.onKeyListener = { code, label ->
             onKeyPressed(code, label)
         }
         
-        return keyboardView
+        return keyboardInputView
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
@@ -107,9 +122,11 @@ class OpenSwiftIME : InputMethodService() {
         if (::keyboardView.isInitialized) {
             keyboardView.setPredictionEnabled(!privacyModeActive)
         }
-        if (settings.clipboardEnabled && !privacyModeActive) {
-            clipboard.captureSystem(this)
-        }
+        clipboard.captureSystem(
+            ctx = this,
+            enabled = settings.clipboardEnabled,
+            privateField = privacyModeActive
+        )
         shiftActive = settings.autoCapitalize // Start with shift active if auto-capitalize is on
         symbolsActive = false
         emojiMode = false
@@ -185,6 +202,7 @@ class OpenSwiftIME : InputMethodService() {
                 emojiMode = true
                 showEmojiView()
             }
+            KC.CLIPBOARD -> showClipboardView()
             KC.SETTINGS -> {
                 startActivity(android.content.Intent(this, com.openswift.keyboard.ui.MainActivity::class.java))
             }
@@ -300,18 +318,38 @@ class OpenSwiftIME : InputMethodService() {
     }
 
     private fun showEmojiView() {
-        setInputView(emojiView)
+        setInputView(emojiInputView)
     }
 
     private fun showClipboardView() {
-        if (privacyModeActive || !settings.clipboardEnabled) return
+        if (privacyModeActive) return
         clipboardMode = true
-        setInputView(clipboardView)
+        clipboardView.refresh()
+        setInputView(clipboardInputView)
     }
 
     private fun showKeyboardView() {
-        setInputView(keyboardView)
+        setInputView(keyboardInputView)
     }
+
+    private fun withNavigationBarInset(content: View, backgroundColor: Int): View =
+        FrameLayout(this).apply {
+            setBackgroundColor(backgroundColor)
+            addView(
+                content,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+            ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
+                val bottomInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+                if (view.paddingBottom != bottomInset) {
+                    view.setPadding(0, 0, 0, bottomInset)
+                }
+                insets
+            }
+        }
 
     override fun onFinishInput() {
         super.onFinishInput()

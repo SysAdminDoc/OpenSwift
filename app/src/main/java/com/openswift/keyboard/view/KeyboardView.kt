@@ -15,6 +15,7 @@ import com.openswift.keyboard.layout.Key
 import com.openswift.keyboard.layout.KeyLayout
 import com.openswift.keyboard.layout.KeyCode as KC
 import com.openswift.keyboard.theme.Themes
+import kotlin.math.ceil
 
 class KeyboardView(
     ctx: Context,
@@ -125,12 +126,18 @@ class KeyboardView(
         val w = MeasureSpec.getSize(widthMeasureSpec)
         val density = resources.displayMetrics.density
         
-        // Calculate total keyboard height: all key rows + suggestion row
-        val keyHeightPx = (settings.keyHeightDp * density).toInt()
+        // Mirror the drawing path exactly so the final row is never clipped.
+        val keyHeightPx = settings.keyHeightDp * density
         val numRows = effectiveLayout.rows.size // includes number row if enabled
-        val totalRowsHeight = keyHeightPx * numRows
-        val suggestionRowHeight = if (predictionEnabled) (keyHeightPx * 1.2f).toInt() else 0
-        val h = suggestionRowHeight + totalRowsHeight + (keyHeightPx * 0.2f).toInt() // spacing buffer
+        val rowSpacingPx = 2f * density
+        val suggestionHeight = if (predictionEnabled) {
+            (4f * density) + (keyHeightPx * 1.2f) + (4f * density)
+        } else {
+            0f
+        }
+        val rowsHeight = (keyHeightPx * numRows) +
+            (rowSpacingPx * (numRows - 1).coerceAtLeast(0))
+        val h = ceil(suggestionHeight + rowsHeight).toInt()
         
         setMeasuredDimension(w, h)
     }
@@ -250,7 +257,14 @@ class KeyboardView(
                     key.label
                 }
                 
+                val defaultTextSize = textPaint.textSize
+                val availableTextWidth = (kw.toFloat() - (keyPadding * 2) - (8f * density)).coerceAtLeast(1f)
+                val labelWidth = textPaint.measureText(displayLabel)
+                if (labelWidth > availableTextWidth) {
+                    textPaint.textSize = defaultTextSize * (availableTextWidth / labelWidth)
+                }
                 canvas.drawText(displayLabel, textX, textY, textPaint)
+                textPaint.textSize = defaultTextSize
                 x2 += kw.toFloat()
             }
             y += keyHeightPx + rowSpacingPx

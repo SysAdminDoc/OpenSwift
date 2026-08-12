@@ -103,6 +103,7 @@ object Layouts {
 
     private fun bottomRow(symbols: Boolean = false): List<Key> = listOf(
         Key(if (symbols) "ABC" else "?123", if (symbols) KC.ABC else KC.SYMBOLS, widthWeight = 1.5f, isModifier = true),
+        Key("📋", KC.CLIPBOARD, widthWeight = 1.1f, isModifier = true),
         Key(",", KC.COMMA, popup = listOf("!", "?", ";", ":")),
         Key("space", KC.SPACE, widthWeight = 4f),
         Key(".", KC.PERIOD, popup = listOf("…", "!", "?")),
