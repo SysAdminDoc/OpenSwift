@@ -13,6 +13,7 @@ class KeyboardLanguagesTest {
         assertEquals("qwertz", byCode.getValue("de").layoutId)
         assertEquals("azerty", byCode.getValue("fr").layoutId)
         assertEquals("qwerty", byCode.getValue("es").layoutId)
+        assertEquals("qwerty", byCode.getValue("it").layoutId)
     }
 
     @Test
@@ -20,7 +21,10 @@ class KeyboardLanguagesTest {
         assertEquals("de", KeyboardLanguages.byLocale("de_DE").code)
         assertEquals("fr", KeyboardLanguages.byLocale("fr-FR").code)
         assertEquals("es", KeyboardLanguages.byLocale("es_ES").code)
-        assertEquals("en", KeyboardLanguages.byLocale("it_IT").code)
-        assertTrue(KeyboardLanguages.all.map { it.code }.containsAll(listOf("en", "de", "fr", "es")))
+        assertEquals("it", KeyboardLanguages.byLocale("it_IT").code)
+        assertEquals("en", KeyboardLanguages.byLocale("ja_JP").code)
+        assertTrue(
+            KeyboardLanguages.all.map { it.code }.containsAll(listOf("en", "de", "fr", "es", "it")),
+        )
     }
 }

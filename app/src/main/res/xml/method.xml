@@ -22,4 +22,9 @@
         android:imeSubtypeLocale="es_ES"
         android:imeSubtypeMode="keyboard"
         android:isAsciiCapable="true" />
+    <subtype
+        android:label="@string/subtype_it"
+        android:imeSubtypeLocale="it_IT"
+        android:imeSubtypeMode="keyboard"
+        android:isAsciiCapable="true" />
 </input-method>

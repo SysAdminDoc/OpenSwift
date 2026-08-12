@@ -117,7 +117,7 @@ fun AboutUI(
                     "Glide typing with smart gesture detection",
                     "10 beautiful color themes including accessibility modes",
                     "Animated ripple & glide trail effects",
-                    "English, German, French, and Spanish dictionaries",
+                    "English, German, French, Spanish, and Italian dictionaries",
                     "Offline language detection for suggestions",
                     "Emoji keyboard with categories, recents, favorites, and search",
                     "Export and import for learned words, snippets, and custom themes",

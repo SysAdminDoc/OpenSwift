@@ -17,7 +17,8 @@ object KeyboardLanguages {
         English,
         KeyboardLanguage("de", "German", "de_DE", "qwertz", R.raw.words_de),
         KeyboardLanguage("fr", "French", "fr_FR", "azerty", R.raw.words_fr),
-        KeyboardLanguage("es", "Spanish", "es_ES", "qwerty", R.raw.words_es)
+        KeyboardLanguage("es", "Spanish", "es_ES", "qwerty", R.raw.words_es),
+        KeyboardLanguage("it", "Italian", "it_IT", "qwerty", R.raw.words_it)
     )
 
     fun byCode(code: String?): KeyboardLanguage {

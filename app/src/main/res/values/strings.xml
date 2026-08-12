@@ -5,6 +5,7 @@
     <string name="subtype_de">German</string>
     <string name="subtype_fr">French</string>
     <string name="subtype_es">Spanish</string>
+    <string name="subtype_it">Italian</string>
     <string name="enable_keyboard">Enable OpenSwift in system settings</string>
     <string name="select_keyboard">Choose OpenSwift as input method</string>
     <string name="settings">Settings</string>

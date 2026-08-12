@@ -12,7 +12,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - **Animated Feedback** — Ripple effect on key tap, gradient fade on glide trail (v0.2+)
 - **Suggestion Pills** — Rounded pill-shaped suggestions with preview text (v0.2+)
 - **Word Prediction** — Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
-- **Multilingual Dictionaries** — English, German, French, and Spanish word lists with language-specific layout defaults
+- **Multilingual Dictionaries** — English, German, French, Spanish, and Italian word lists with language-specific layout defaults
 - **Offline Language Detection** — Current/recent input can switch suggestion dictionaries without network calls
 - **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
 - **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
@@ -98,7 +98,7 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 
 ## Settings
 
-- **Language** — English, German, French, or Spanish with matching default keyboard layout
+- **Language** — English, German, French, Spanish, or Italian with matching default keyboard layout
 - **Detect Language** — Local context scoring can switch prediction language automatically
 - **Theme** — 10 built-in themes + custom theme editor
 - **Keyboard Layout** — QWERTY, QWERTZ, AZERTY
@@ -190,6 +190,7 @@ Manual language selection switches the active offline dictionary and learned-wor
 - German uses QWERTZ by default
 - French uses AZERTY by default
 - Spanish uses QWERTY by default
+- Italian uses QWERTY by default
 
 When language detection is enabled, OpenSwift scores the current word and recent local context against bundled dictionaries and accent hints. No typed text is sent off-device.
 
@@ -261,7 +262,7 @@ OpenSwift is open to community contributions. Start with the build and architect
 
 **Ideas for contributions:**
 - New keyboard layouts (Dvorak, Colemak, Bépo, etc.)
-- Language packs (German, French, Spanish word lists)
+- Language packs (German, French, Spanish, and Italian word lists)
 - Additional themes
 - Accessibility improvements
 - Performance optimizations

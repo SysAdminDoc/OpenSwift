@@ -16,7 +16,8 @@ class LanguageDetector(
     private val accentHints = mapOf(
         "de" to setOf('ä', 'ö', 'ü', 'ß'),
         "fr" to setOf('à', 'â', 'æ', 'ç', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'œ', 'ù', 'û', 'ÿ'),
-        "es" to setOf('á', 'é', 'í', 'ñ', 'ó', 'ú', 'ü', '¡', '¿')
+        "es" to setOf('á', 'é', 'í', 'ñ', 'ó', 'ú', 'ü', '¡', '¿'),
+        "it" to setOf('à', 'è', 'é', 'ì', 'ò', 'ù')
     )
 
     fun detect(tokens: List<String>, currentLanguage: String): Result? {
