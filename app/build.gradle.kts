@@ -29,6 +29,8 @@ android {
         targetSdk = 35
         versionCode = 7
         versionName = "0.3.4"
+        buildConfigField("boolean", "ENABLE_EXPERIMENTAL_SYNC", "false")
+        buildConfigField("boolean", "ENABLE_EXPERIMENTAL_PLUGINS", "false")
     }
 
     signingConfigs {

@@ -42,6 +42,7 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 - `Settings` + `ClipboardHistory` — Persistent user preferences and clipboard state
 - `DataPortability` — Local JSON export/import for learned words, snippets, and custom themes
 - `Themes` + `Layouts` — 10 built-in themes and 3 keyboard layouts with language defaults
+- `EncryptedSyncCodec` + `PluginRegistry` — Feature-gated, contract-tested boundaries for authenticated sync envelopes and in-process extensions
 
 ## Building
 
@@ -222,6 +223,22 @@ Applied at space, enter, and punctuation boundaries when enabled:
 - **Automatic incognito fields** — Password and app-declared private/no-suggestions editors never expose suggestions or feed local learning and clipboard history
 - **Device learns** — User bigrams and word frequencies stay on-device
 - **Clipboard history** — Off by default, bounded to 25 unique non-empty items, and cleared on uninstall
+
+### Experimental extension boundaries
+
+Published builds compile both `ENABLE_EXPERIMENTAL_SYNC` and
+`ENABLE_EXPERIMENTAL_PLUGINS` as `false`, so neither surface is reachable from
+settings or the IME. The sync boundary only accepts dictionary, snippet, and
+theme payloads; transports receive versioned AES-256-GCM envelopes whose keys
+are derived from non-persisted passphrases. Per-app metadata and analytics are
+not part of the contract.
+
+Plugin API v1 supports prediction, theme, and layout capabilities for explicitly
+registered in-process extensions. It deliberately provides no APK loading,
+reflection discovery, Android `Context`, filesystem, or network capability.
+Metadata, namespaces, text lengths, suggestion counts, and keyboard geometry
+are bounded; a plugin that throws or violates its contract is unloaded and
+quarantined without taking down healthy plugins.
 
 ## Roadmap
 
