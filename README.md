@@ -1,6 +1,6 @@
 # OpenSwift
 
-[![Version](https://img.shields.io/badge/version-0.3.4-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
+[![Version](https://img.shields.io/badge/version-0.3.5-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
 
@@ -8,42 +8,42 @@ A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typi
 
 ## Features
 
-- **Glide Typing** — Swipe continuously across keys for fast text entry; path-aware word decoding using Damerau-Levenshtein distance
-- **Animated Feedback** — Ripple effect on key tap, gradient fade on glide trail (v0.2+)
-- **Suggestion Pills** — Rounded pill-shaped suggestions with preview text (v0.2+)
-- **Word Prediction** — Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
-- **Multilingual Dictionaries** — English, German, French, Spanish, and Italian word lists with language-specific layout defaults
-- **Offline Language Detection** — Current/recent input can switch suggestion dictionaries without network calls
-- **Auto-Correct** — Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
-- **Multi-Layout** — QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
-- **10 Themes** — AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
-- **Custom Packages** — Import validated, encrypted-at-rest JSON packages containing custom themes or keyboard layouts
-- **Emoji Picker** — Categorized emoji with recents, favorites, keyword search, and no network dependency
-- **Data Portability** — Export/import learned words, snippets, custom themes, and custom layouts with validated merge or confirmed replace behavior
-- **Encrypted Sync Snapshots** — Save or open passphrase-encrypted `.oswsync` documents through an Android document provider; nothing syncs automatically
-- **Clipboard Manager** — Opt-in history of 25 recent items with sensitive-clip filtering, a dedicated keyboard panel, per-item delete, and clear-all
-- **Snippets/Text Expansion** — Create, edit, and delete validated trigger→expansion pairs; type a trigger followed by space, enter, or punctuation to replace it
-- **Learning Dictionary** — Persistent per-word frequency tracking and bigram learning (local-only)
-- **Voice Input** — Speech recognition with partial result streaming (v0.2+)
-- **Number Row** — Dedicated digit row for quick number entry (v0.2+)
-- **Usage Analytics** — Local-only keystroke, word, and correction tracking (no data leaves device)
-- **Accessibility** — Full TalkBack support, key announcements, navigation support, reduced motion mode (v0.3+)
-- **Privacy Dashboard** — View clipboard history, dictionary stats, and delete all data (v0.3+)
-- **Sensitive-Field Privacy** — Password, private, and no-suggestions fields automatically disable prediction, glide decoding, learning, snippets, and clipboard capture
-- **Per-App Profiles** — Disable predictions/learning or glide and override key height for individual applications without changing global settings
-- **Haptic & Sound Feedback** — Customizable vibration (20ms default) and optional audio cues
+- **Glide Typing**: Swipe continuously across keys for fast text entry; path-aware word decoding using Damerau-Levenshtein distance
+- **Animated Feedback**: Ripple effect on key tap, gradient fade on glide trail (v0.2+)
+- **Suggestion Pills**: Rounded pill-shaped suggestions with preview text (v0.2+)
+- **Word Prediction**: Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
+- **Multilingual Dictionaries**: English, German, French, Spanish, and Italian word lists with language-specific layout defaults
+- **Offline Language Detection**: Current/recent input can switch suggestion dictionaries without network calls
+- **Auto-Correct**: Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
+- **Multi-Layout**: QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
+- **10 Themes**: AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
+- **Custom Packages**: Import validated, encrypted-at-rest JSON packages containing custom themes or keyboard layouts
+- **Emoji Picker**: Categorized emoji with recents, favorites, keyword search, and no network dependency
+- **Data Portability**: Export/import learned words, snippets, custom themes, and custom layouts with validated merge or confirmed replace behavior
+- **Encrypted Sync Snapshots**: Save or open passphrase-encrypted `.oswsync` documents through an Android document provider; nothing syncs automatically
+- **Clipboard Manager**: Opt-in history of 25 recent items with sensitive-clip filtering, a dedicated keyboard panel, per-item delete, and clear-all
+- **Snippets/Text Expansion**: Create, edit, and delete validated trigger→expansion pairs; type a trigger followed by space, enter, or punctuation to replace it
+- **Learning Dictionary**: Persistent per-word frequency tracking and bigram learning (local-only)
+- **Voice Input**: Speech recognition with partial result streaming (v0.2+)
+- **Number Row**: Dedicated digit row for quick number entry (v0.2+)
+- **Usage Analytics**: Local-only keystroke, word, and correction tracking (no data leaves device)
+- **Accessibility**: Full TalkBack support, key announcements, navigation support, reduced motion mode (v0.3+)
+- **Privacy Dashboard**: View clipboard history, dictionary stats, and delete all data (v0.3+)
+- **Sensitive-Field Privacy**: Password, private, and no-suggestions fields automatically disable prediction, glide decoding, learning, snippets, and clipboard capture
+- **Per-App Profiles**: Disable predictions/learning or glide and override key height for individual applications without changing global settings
+- **Haptic & Sound Feedback**: Customizable vibration (20ms default) and optional audio cues
 
 ## Architecture
 
-- `OpenSwiftIME` — Main InputMethodService; coordinates layout, prediction, and input flow
-- `KeyboardView` — Custom View rendering keys, suggestions, and glide trail detection
-- `Predictor` — Scoring engine for next-word and auto-correct suggestions
-- `GlideDecoder` — Polyline-to-word decoding using anchored key subsequence matching
-- `WordList` + `UserDictionary` — Frequency-based per-language word stores + per-user bigram learning
-- `Settings` + `ClipboardHistory` — Persistent user preferences and clipboard state
-- `DataPortability` + `EncryptedSyncSnapshot` — Bounded, validated local JSON portability with optional authenticated encrypted documents
-- `Themes` + `Layouts` — 10 built-in themes and 3 keyboard layouts with language defaults
-- `EncryptedSyncCodec` + `PluginRegistry` — Feature-gated, contract-tested boundaries for authenticated sync envelopes and in-process extensions
+- `OpenSwiftIME`: Main InputMethodService; coordinates layout, prediction, and input flow
+- `KeyboardView`: Custom View rendering keys, suggestions, and glide trail detection
+- `Predictor`: Scoring engine for next-word and auto-correct suggestions
+- `GlideDecoder`: Polyline-to-word decoding using anchored key subsequence matching
+- `WordList` + `UserDictionary`: Frequency-based per-language word stores + per-user bigram learning
+- `Settings` + `ClipboardHistory`: Persistent user preferences and clipboard state
+- `DataPortability` + `EncryptedSyncSnapshot`: Bounded, validated local JSON portability with optional authenticated encrypted documents
+- `Themes` + `Layouts`: 10 built-in themes and 3 keyboard layouts with language defaults
+- `EncryptedSyncCodec` + `PluginRegistry`: Feature-gated, contract-tested boundaries for authenticated sync envelopes and in-process extensions
 
 ## Building
 
@@ -98,23 +98,23 @@ Public setup, usage, architecture, and contribution notes are consolidated in th
 
 ## Settings
 
-- **Language** — English, German, French, Spanish, or Italian with matching default keyboard layout
-- **Detect Language** — Local context scoring can switch prediction language automatically
-- **Theme** — 10 built-in themes + custom theme editor
-- **Keyboard Layout** — QWERTY, QWERTZ, AZERTY
-- **Glide Typing** — Enable/disable swipe-to-type
-- **Auto-Correct** — Toggle fuzzy correction
-- **Auto-Capitalize** — Auto-capitalize after punctuation
-- **Haptic Feedback** — Vibration on keypress (20ms default)
-- **Sound Feedback** — Optional audio cues
-- **Key Height** — Adjust keyboard size (48–72 dp)
-- **Clipboard History** — Opt in to encrypted clipboard capture; Android-marked sensitive clips and private fields are always skipped
-- **Snippets** — Manage case-insensitive triggers and multiline replacements; expansion is always disabled in private fields
-- **Per-App Profiles** — Tap the keyboard settings key inside an app to prefill its package name, then save prediction, glide, or key-height overrides; reset one profile or all profiles at any time
-- **Customization Packages** — Import a versioned JSON theme/layout package; invalid files report the exact field or keyboard action that needs correction
-- **Data Portability** — Export a readable JSON backup, merge imported data, or confirm replacement of local learned words/snippets/custom themes/custom layouts; complete validation happens before data changes
-- **Encrypted Sync Snapshots** — Export with a confirmed 12+ character passphrase, then merge or replace from a `.oswsync` document; OpenSwift never stores the passphrase
-- **Incognito Mode** — Disable prediction history, learning, snippets, and clipboard capture for every field
+- **Language**: English, German, French, Spanish, or Italian with matching default keyboard layout
+- **Detect Language**: Local context scoring can switch prediction language automatically
+- **Theme**: 10 built-in themes + custom theme editor
+- **Keyboard Layout**: QWERTY, QWERTZ, AZERTY
+- **Glide Typing**: Enable/disable swipe-to-type
+- **Auto-Correct**: Toggle fuzzy correction
+- **Auto-Capitalize**: Auto-capitalize after punctuation
+- **Haptic Feedback**: Vibration on keypress (20ms default)
+- **Sound Feedback**: Optional audio cues
+- **Key Height**: Adjust keyboard size (48-72 dp)
+- **Clipboard History**: Opt in to encrypted clipboard capture; Android-marked sensitive clips and private fields are always skipped
+- **Snippets**: Manage case-insensitive triggers and multiline replacements; expansion is always disabled in private fields
+- **Per-App Profiles**: Tap the keyboard settings key inside an app to prefill its package name, then save prediction, glide, or key-height overrides; reset one profile or all profiles at any time
+- **Customization Packages**: Import a versioned JSON theme/layout package; invalid files report the exact field or keyboard action that needs correction
+- **Data Portability**: Export a readable JSON backup, merge imported data, or confirm replacement of local learned words/snippets/custom themes/custom layouts; complete validation happens before data changes
+- **Encrypted Sync Snapshots**: Export with a confirmed 12+ character passphrase, then merge or replace from a `.oswsync` document; OpenSwift never stores the passphrase
+- **Incognito Mode**: Disable prediction history, learning, snippets, and clipboard capture for every field
 
 ## Customization Package Format
 
@@ -148,20 +148,20 @@ file can contain up to 10 themes and 10 layouts, and must contain at least one:
 
 Theme IDs must start with `custom_`; colors accept `#RRGGBB` or `#AARRGGBB`.
 Layout IDs must start with `custom_layout_`. A layout contains `name` and
-`rows`, where every key has a `label`, optional `width` (0.25–5), optional
+`rows`, where every key has a `label`, optional `width` (0.25-5), optional
 single-character `popup` array, and either the default `character` action or
 one of: `shift`, `delete`, `enter`, `space`, `symbols`, `clipboard`, `comma`,
-`period`, `emoji`, `settings`, or `spacer`. Layouts allow 3–6 rows, 2–16 keys
+`period`, `emoji`, `settings`, or `spacer`. Layouts allow 3-6 rows, 2-16 keys
 per row, and 64 keys total; character labels must be unique, and exactly one
 Shift, Delete, Enter, Space, and Symbols action is required. Raw numeric key
 codes and unsupported actions are rejected.
 
 ## Emoji Picker
 
-- **Categories** — Recent, favorites, smileys, hands, hearts, food, nature, travel, objects, and symbols
-- **Recents** — Selected emoji are stored locally for fast reuse
-- **Favorites** — Long-press an emoji to toggle it as a favorite
-- **Search** — Tap the search field and use the in-picker letters to filter by local keywords
+- **Categories**: Recent, favorites, smileys, hands, hearts, food, nature, travel, objects, and symbols
+- **Recents**: Selected emoji are stored locally for fast reuse
+- **Favorites**: Long-press an emoji to toggle it as a favorite
+- **Search**: Tap the search field and use the in-picker letters to filter by local keywords
 
 ## How It Works
 
@@ -218,14 +218,14 @@ Applied at space, enter, and punctuation boundaries when enabled:
 
 ## Privacy & Security
 
-- **Zero cloud dependency** — No network requests, no account required
-- **Encrypted at rest** — Clipboard history, snippets, learned words, local usage data, per-app profiles, emoji history, settings, custom themes, and custom layouts use AES-256 encrypted preferences
-- **No device backup** — Android cloud backup and device-transfer extraction are disabled for OpenSwift data
-- **Open source** — MIT licensed; code is auditable
-- **No telemetry** — No analytics, no crash reporting, no ads
-- **Automatic incognito fields** — Password and app-declared private/no-suggestions editors never expose suggestions or feed local learning and clipboard history
-- **Device learns** — User bigrams and word frequencies stay on-device
-- **Clipboard history** — Off by default, bounded to 25 unique non-empty items, and cleared on uninstall
+- **Zero cloud dependency**: No network requests, no account required
+- **Encrypted at rest**: Clipboard history, snippets, learned words, local usage data, per-app profiles, emoji history, settings, custom themes, and custom layouts use AES-256 encrypted preferences
+- **No device backup**: Android cloud backup and device-transfer extraction are disabled for OpenSwift data
+- **Open source**: MIT licensed; code is auditable
+- **No telemetry**: No analytics, no crash reporting, no ads
+- **Automatic incognito fields**: Password and app-declared private/no-suggestions editors never expose suggestions or feed local learning and clipboard history
+- **Device learns**: User bigrams and word frequencies stay on-device
+- **Clipboard history**: Off by default, bounded to 25 unique non-empty items, and cleared on uninstall
 
 ### Sync and extension boundaries
 
@@ -273,4 +273,4 @@ OpenSwift is open to community contributions. Start with the build and architect
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT: see [LICENSE](LICENSE)

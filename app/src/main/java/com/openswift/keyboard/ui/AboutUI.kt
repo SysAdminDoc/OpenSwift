@@ -50,7 +50,7 @@ fun AboutUI(
         )
         
         Text(
-            "v0.3.4",
+            "v0.3.5",
             style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f)
         )
@@ -124,7 +124,7 @@ fun AboutUI(
                     "Smart predictions & auto-correct",
                     "Privacy dashboard & clipboard management",
                     "Reduced motion mode for accessibility",
-                    "No telemetry—100% private"
+                    "No telemetry. 100% private."
                 ).forEach { feature ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
