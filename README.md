@@ -92,6 +92,10 @@ release-size guardrail.
 6. Set **OpenSwift** as default input method
 7. Open any text field and start typing!
 
+If you installed v0.3.0, uninstall it before installing v0.3.5. The older APK
+used a debug certificate, while current public releases use a stable release
+certificate.
+
 ## Documentation
 
 Public setup, usage, architecture, and contribution notes are consolidated in this README. Local planning notes are kept in ignored working-tree files so the GitHub README remains the canonical public document.

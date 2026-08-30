@@ -26,6 +26,7 @@
 
 ### Fixed
 - The optional number row now accepts a complete touch gesture and reports the selected key. Its previous `ACTION_DOWN` path returned false, so Android stopped delivering the gesture before `ACTION_UP` could emit a digit.
+- Public APKs now use a stable release certificate. The older v0.3.0 APK used a debug certificate, so that version must be uninstalled once before installing v0.3.5.
 - Debug APK builds now use Android's managed debug signing configuration instead of requiring a keystore inside the disposable build directory.
 - Release APKs can be built unsigned for local verification when signing credentials are absent; signed output still requires all four release-keystore environment variables.
 - Privacy delete-all now clears every typed-data store and all bundled language dictionaries.
