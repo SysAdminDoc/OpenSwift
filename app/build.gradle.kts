@@ -66,6 +66,9 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 fun releaseApk(): File {
@@ -135,4 +138,5 @@ dependencies {
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
+    testImplementation("org.robolectric:robolectric:4.16")
 }

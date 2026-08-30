@@ -12,58 +12,85 @@ import com.openswift.keyboard.theme.Themes
 
 class NumberRowView @JvmOverloads constructor(
     ctx: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : View(ctx, attrs) {
 
     var onKeyListener: ((Int, String) -> Unit)? = null
 
-    private val layout = NumberRowLayout.toLayout()
+    private val keys = NumberRowLayout.toLayout().rows.first()
     private val theme = Themes.Amoled
-    private val keyBounds = mutableMapOf<String, Rect>()
+    private val keyBounds = ArrayList<Rect>(keys.size)
     private val keyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
         textSize = 18f
         color = theme.keyText
     }
+    private val dividerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = theme.keyAccent
+        strokeWidth = 1f
+    }
+
+    init {
+        isClickable = true
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val w = MeasureSpec.getSize(widthMeasureSpec)
-        val h = (56 * resources.displayMetrics.density).toInt()
-        setMeasuredDimension(w, h)
+        val measuredWidth = MeasureSpec.getSize(widthMeasureSpec)
+        val measuredHeight = (56 * resources.displayMetrics.density).toInt()
+        setMeasuredDimension(measuredWidth, measuredHeight)
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        val totalWeight = keys.sumOf { it.widthWeight.toDouble() }
+        var x = 0.0
+        keyBounds.clear()
+        keys.forEachIndexed { index, key ->
+            val keyWidth = (w.toDouble() / totalWeight) * key.widthWeight.toDouble()
+            val right = if (index == keys.lastIndex) w else (x + keyWidth).toInt()
+            keyBounds.add(Rect(x.toInt(), 0, right, h))
+            x += keyWidth
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
         canvas.drawColor(theme.keyBackground)
-
-        val w = width.toFloat()
-        val h = height.toFloat()
-        val row = layout.rows.first()
-        val totalWeight = row.sumOf { it.widthWeight.toDouble() }
-        var x = 0.0
-
-        keyBounds.clear()
-        for (key in row) {
-            val kw = (w.toDouble() / totalWeight) * key.widthWeight.toDouble()
-            val rect = Rect(x.toInt(), 0, (x + kw).toInt(), h.toInt())
-            keyBounds[key.label] = rect
-
-            canvas.drawRect(x.toFloat(), 0f, (x + kw).toFloat(), h, Paint().apply { color = theme.keyBackground })
-            canvas.drawLine(x.toFloat(), 0f, (x + kw).toFloat(), 0f, Paint().apply { color = theme.keyAccent })
-            canvas.drawLine(x.toFloat(), h - 1, (x + kw).toFloat(), h - 1, Paint().apply { color = theme.keyAccent })
-            canvas.drawText(key.label, (x + kw / 2).toFloat(), h * 0.6f, keyPaint)
-            x += kw
+        val viewHeight = height.toFloat()
+        for (index in keys.indices) {
+            val key = keys[index]
+            val bounds = keyBounds.getOrNull(index) ?: continue
+            canvas.drawLine(bounds.left.toFloat(), 0f, bounds.right.toFloat(), 0f, dividerPaint)
+            canvas.drawLine(
+                bounds.left.toFloat(),
+                viewHeight - 1f,
+                bounds.right.toFloat(),
+                viewHeight - 1f,
+                dividerPaint,
+            )
+            canvas.drawText(key.label, bounds.exactCenterX(), viewHeight * 0.6f, keyPaint)
         }
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_UP) {
-            for ((label, rect) in keyBounds) {
-                if (rect.contains(event.x.toInt(), event.y.toInt())) {
-                    onKeyListener?.invoke(label[0].code, label)
-                    return true
-                }
+    override fun onTouchEvent(event: MotionEvent): Boolean = when (event.actionMasked) {
+        MotionEvent.ACTION_DOWN -> keyIndexAt(event.x, event.y) != null
+        MotionEvent.ACTION_UP -> {
+            keyIndexAt(event.x, event.y)?.let { index ->
+                val key = keys[index]
+                performClick()
+                onKeyListener?.invoke(key.code, key.label)
             }
+            true
         }
-        return super.onTouchEvent(event)
+        MotionEvent.ACTION_CANCEL -> true
+        else -> true
+    }
+
+    override fun performClick(): Boolean = super.performClick()
+
+    private fun keyIndexAt(x: Float, y: Float): Int? {
+        val xCoordinate = x.toInt()
+        val yCoordinate = y.toInt()
+        return keyBounds.indexOfFirst { it.contains(xCoordinate, yCoordinate) }
+            .takeIf { it >= 0 }
     }
 }
