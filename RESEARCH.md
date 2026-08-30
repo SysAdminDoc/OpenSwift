@@ -26,8 +26,8 @@ OpenSwift is a privacy-first Android keyboard with a strong local-only positioni
 - Verified: `app/src/main/AndroidManifest.xml` has `android:allowBackup="true"` and no visible backup exclusion rules. Clipboard history, snippets, user dictionary, usage analytics, per-app settings, and custom themes are stored outside `EncryptedSharedPreferences`.
 - Verified: `app/src/main/java/com/openswift/keyboard/OpenSwiftIME.kt` calls clipboard capture during input view start and learns typed words without first enforcing sensitive `EditorInfo`/`InputType` modes, `settings.incognitoMode`, or `settings.clipboardEnabled`.
 - Verified: `app/src/main/java/com/openswift/keyboard/data/Settings.kt` exposes incognito and clipboard toggles, but the IME path does not consistently enforce them.
-- Verified: `app/src/main/java/com/openswift/keyboard/sync/CloudSync.kt` contains placeholder encryption that returns input bytes unchanged. Keep sync hidden until real authenticated encryption, key management, and tests exist.
-- Verified: `app/src/main/java/com/openswift/keyboard/plugins/PluginRegistry.kt` is a placeholder. Any future runtime extension path needs explicit permission, signing, API, and failure isolation before exposure.
+- Updated: sync is compile-time hidden and uses a versioned authenticated AES-GCM passphrase envelope; transports cannot receive plaintext, per-app metadata, or analytics.
+- Updated: plugin API v1 is compile-time hidden, explicitly registered in-process only, capability-limited, namespace/result validated, and failure-isolated with contract tests.
 - Verified: `app/src/main/java/com/openswift/keyboard/speech/VoiceRecognizer.kt` exists, but the manifest has no `RECORD_AUDIO` permission and the IME UI does not expose a complete voice flow.
 - Verified: `app/src/main/java/com/openswift/keyboard/snippets/SnippetManager.kt` supports storage, but settings UI creation is incomplete and IME expansion currently checks only single digit keys.
 - Likely: user dictionary persistence can grow without cap and prediction does not surface learned-only words as first-class candidates. This weakens the privacy/local-learning value proposition.
