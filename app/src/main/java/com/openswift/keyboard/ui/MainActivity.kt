@@ -13,6 +13,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Settings as SettingsNavigationIcon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -407,7 +412,13 @@ fun MainUI(
                 .fillMaxWidth()
         ) {
             when (activeTab) {
-                0 -> HomeUI(theme, bgColor, keyBgColor, textColor, accentColor)
+                0 -> HomeUI(
+                    theme = theme,
+                    bgColor = bgColor,
+                    textColor = textColor,
+                    accentColor = accentColor,
+                    onBrowseThemes = { activeTab = 1 },
+                )
                 1 -> EnhancedSettingsUI(
                     settings,
                     bgColor,
@@ -436,7 +447,6 @@ fun MainUI(
             }
         }
         
-        // Premium bottom navigation bar
         NavigationBar(
             modifier = Modifier.fillMaxWidth(),
             containerColor = surfaceColor.copy(alpha = 0.95f),
@@ -444,19 +454,21 @@ fun MainUI(
             tonalElevation = Elevations.md
         ) {
             val items = listOf(
-                Pair("🏠", "Home"),
-                Pair("⚙️", "Settings"),
-                Pair("🔒", "Privacy"),
-                Pair("ℹ️", "About")
+                Icons.Filled.Home to "Home",
+                Icons.Filled.SettingsNavigationIcon to "Settings",
+                Icons.Filled.Lock to "Privacy",
+                Icons.Filled.Info to "About",
             )
             
             items.forEachIndexed { index, (icon, label) ->
                 NavigationBarItem(
                     icon = {
-                        Text(
-                            icon,
-                            fontSize = 20.sp,
-                            modifier = Modifier.padding(bottom = if (activeTab == index) 2.dp else 0.dp)
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .padding(bottom = if (activeTab == index) 2.dp else 0.dp),
                         )
                     },
                     label = {
@@ -518,7 +530,7 @@ fun EnhancedSettingsUI(
 
         // Appearance Section
         SettingsSection(
-            title = "🎨 Appearance",
+            title = "Appearance",
             textColor = textColor,
             accentColor = accentColor
         ) {
@@ -538,7 +550,7 @@ fun EnhancedSettingsUI(
 
         // Keyboard Settings
         SettingsSection(
-            title = "⌨️ Keyboard",
+            title = "Keyboard",
             textColor = textColor,
             accentColor = accentColor
         ) {
@@ -562,7 +574,7 @@ fun EnhancedSettingsUI(
 
         // Typing & Accuracy
         SettingsSection(
-            title = "✨ Typing & Accuracy",
+            title = "Typing and accuracy",
             textColor = textColor,
             accentColor = accentColor
         ) {
@@ -574,7 +586,7 @@ fun EnhancedSettingsUI(
 
         // Feedback
         SettingsSection(
-            title = "🔊 Feedback",
+            title = "Feedback",
             textColor = textColor,
             accentColor = accentColor
         ) {
@@ -584,7 +596,7 @@ fun EnhancedSettingsUI(
 
         // Accessibility
         SettingsSection(
-            title = "♿ Accessibility",
+            title = "Accessibility",
             textColor = textColor,
             accentColor = accentColor
         ) {
@@ -593,7 +605,7 @@ fun EnhancedSettingsUI(
 
         // Advanced
         SettingsSection(
-            title = "🔧 Advanced",
+            title = "Advanced",
             textColor = textColor,
             accentColor = accentColor
         ) {

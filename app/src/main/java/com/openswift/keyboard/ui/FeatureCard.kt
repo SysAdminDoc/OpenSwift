@@ -2,22 +2,21 @@ package com.openswift.keyboard.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun FeatureCard(
-    icon: String,
+    icon: ImageVector,
     title: String,
     description: String,
     accentColor: Color,
+    textColor: Color,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -43,9 +42,11 @@ fun FeatureCard(
                     .background(accentColor.copy(alpha = 0.2f), Shapes.md),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    icon,
-                    fontSize = 32.sp
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(28.dp)
                 )
             }
             Column(
@@ -55,12 +56,12 @@ fun FeatureCard(
                 Text(
                     title,
                     style = AppTypography.labelLarge,
-                    color = LocalContentColor.current
+                    color = textColor
                 )
                 Text(
                     description,
                     style = AppTypography.bodySmall,
-                    color = LocalContentColor.current.copy(alpha = 0.7f),
+                    color = textColor.copy(alpha = 0.72f),
                     maxLines = 2
                 )
             }

@@ -1,6 +1,28 @@
 # Changelog
 
-## v0.3.5 - 2026-08-29
+## v0.3.6 (2026-09-06)
+
+### Changed
+- Replaced the dated red swoosh with a distinct midnight, cyan, and violet keyboard-path identity that stays clear at launcher and notification sizes.
+- Rebuilt the home screen around plain product benefits, legible feature cards, Material icons, and a working route into themes and settings.
+- Refined the live keyboard with compact suggestion cells, rounded keys, quieter outlines, balanced type sizes, and a proper clipboard icon.
+- Rewrote the README around installation, real product evidence, privacy boundaries, language support, customization, and current limitations.
+
+### Fixed
+- Corrected black feature-card text that was unreadable against the dark home screen.
+- Replaced emoji navigation and section symbols with consistent Material icons.
+- Replaced improvised checkmark, clipboard-delete, and favorite glyphs with official Material icons.
+- Restored direct keyboard access to the emoji picker and full settings, then replaced shift, delete, enter, emoji, and settings glyphs with Material icons.
+- Added a working return path from the emoji picker and replaced its text-only delete control with a Material icon.
+- Stopped drawing the QWERTY and QWERTZ row spacers as clipped edge keys.
+- Updated the About and Privacy screens with clearer copy, current build information, and the new brand mark.
+- Added UI contract tests for color contrast, brand wiring, launcher resources, compact suggestion geometry, rounded keys, and icon use.
+
+### Verification
+- Passed unit tests, Android lint, and the debug APK build with JDK 17.
+- Exercised the management app, launcher, privacy controls, theme settings, and keyboard on an isolated Android 15 emulator.
+
+## v0.3.5 (2026-08-29)
 
 ### Added
 - New app icon: adaptive, themed (monochrome) and legacy variants regenerated from the 2026-08 icon set.
@@ -40,52 +62,52 @@
 - Replacing Compose's extended icon artifact with the core icon set reduced a clean debug APK from 18,916,086 to 11,429,700 bytes (39.6%); the minified release remains 1.74 MiB.
 - Release verification now reports compressed APK size and enforces a 15 MiB budget; AndroidX Security Crypto is pinned to stable `1.1.0`.
 
-## v0.3.4 - 2026-06-28
+## v0.3.4 (2026-06-28)
 
 ### Added
-- **Data portability** - Settings can export learned words, snippets, and custom themes to JSON.
-- **Merge/replace imports** - Imported learned-word counts merge additively; matching snippets and themes overwrite by trigger/id, while replace clears local data first.
-- **Portability tests** - Unit coverage validates dictionary count merging and snippet/theme overwrite behavior.
+- **Data portability**: Settings can export learned words, snippets, and custom themes to JSON.
+- **Merge/replace imports**: Imported learned-word counts merge additively; matching snippets and themes overwrite by trigger/id, while replace clears local data first.
+- **Portability tests**: Unit coverage validates dictionary count merging and snippet/theme overwrite behavior.
 
-## v0.3.3 - 2026-06-28
+## v0.3.3 (2026-06-28)
 
 ### Added
-- **Emoji expansion** - Emoji picker now supports categories, recents, favorites, keyword search, and scrolling result grids.
-- **Emoji catalog tests** - Unit coverage validates categories, search keyword matching, and unique emoji lookup.
+- **Emoji expansion**: Emoji picker now supports categories, recents, favorites, keyword search, and scrolling result grids.
+- **Emoji catalog tests**: Unit coverage validates categories, search keyword matching, and unique emoji lookup.
 
 ### Changed
 - Emoji rendering now reuses paint objects instead of allocating a `Paint` per emoji draw.
 - README, About, version metadata, and local roadmap state now reflect emoji expansion as shipped.
 
-## v0.3.2 - 2026-06-28
+## v0.3.2 (2026-06-28)
 
 ### Added
-- **Offline language detection** - Current and recent typed words can switch suggestion dictionaries without sending text off-device.
-- **Detection setting** - Users can disable automatic language detection while keeping manual language selection.
-- **Detector tests** - Unit coverage validates dictionary evidence, accent evidence, and ambiguous-current-language behavior.
+- **Offline language detection**: Current and recent typed words can switch suggestion dictionaries without sending text off-device.
+- **Detection setting**: Users can disable automatic language detection while keeping manual language selection.
+- **Detector tests**: Unit coverage validates dictionary evidence, accent evidence, and ambiguous-current-language behavior.
 
 ### Changed
 - README, About, version metadata, and local roadmap state now reflect language detection as shipped.
 
-## v0.3.1 - 2026-06-27
+## v0.3.1 (2026-06-27)
 
 ### Added
-- **Multilingual foundation** - English, German, French, and Spanish offline dictionaries can be selected manually.
-- **Language-specific layouts** - German defaults to QWERTZ, French defaults to AZERTY, and English/Spanish default to QWERTY.
-- **IME subtypes** - Android can identify English, German, French, and Spanish keyboard subtypes.
-- **Language registry tests** - Unit coverage locks the language-to-layout fallback behavior.
+- **Multilingual foundation**: English, German, French, and Spanish offline dictionaries can be selected manually.
+- **Language-specific layouts**: German defaults to QWERTZ, French defaults to AZERTY, and English/Spanish default to QWERTY.
+- **IME subtypes**: Android can identify English, German, French, and Spanish keyboard subtypes.
+- **Language registry tests**: Unit coverage locks the language-to-layout fallback behavior.
 
 ### Changed
 - Prediction, auto-correct, glide decoding, and learned-word storage now use the active language instead of always using English.
 - README and quick-start scripts now point at the tracked public README instead of ignored local markdown docs.
 
-## v0.3.0 — 2026-05-04 (Accessibility & Privacy)
+## v0.3.0 (2026-05-04, Accessibility & Privacy)
 
 ### Added
-- **Reduced Motion accessibility toggle** — Disables ripple, trail, and animation effects for users with vestibular sensitivity
-- **High Contrast WCAG AAA theme** — 10th theme with 7:1+ contrast ratio for color-blind and low-vision users (black text on white, white text on black)
-- **Privacy Dashboard** — View clipboard history, dictionary stats, clear all data with single tap
-- **4 new themes** — Nord, Dracula, Tokyo Night, High Contrast (total 10 themes)
+- **Reduced Motion accessibility toggle**: Disables ripple, trail, and animation effects for users with vestibular sensitivity
+- **High Contrast WCAG AAA theme**: 10th theme with 7:1+ contrast ratio for color-blind and low-vision users (black text on white, white text on black)
+- **Privacy Dashboard**: View clipboard history, dictionary stats, clear all data with single tap
+- **4 new themes**: Nord, Dracula, Tokyo Night, High Contrast (total 10 themes)
 
 ### Changed
 - Settings reorganized into sections: Appearance, Keyboard, Typing, Feedback, **Accessibility**, Advanced
@@ -101,21 +123,21 @@
 
 ---
 
-## v0.2.0 — 2026-05-04
+## v0.2.0 (2026-05-04)
 
 ### Added
-- **Animated key press feedback** — Ripple effect emanates from tap point, 400ms cubic-out fade with theme-aware color
-- **Glide trail gradient** — Trail line fades from opaque to transparent over 300ms during gesture input
-- **Suggestion pills UI** — Rounded suggestion boxes with preview text (first 3 chars) for faster visual scanning
-- **Encrypted SharedPreferences** — All user data (settings, dictionary, clipboard) now encrypted via AES256-GCM
+- **Animated key press feedback**: Ripple effect emanates from tap point, 400ms cubic-out fade with theme-aware color
+- **Glide trail gradient**: Trail line fades from opaque to transparent over 300ms during gesture input
+- **Suggestion pills UI**: Rounded suggestion boxes with preview text (first 3 chars) for faster visual scanning
+- **Encrypted SharedPreferences**: All user data (settings, dictionary, clipboard) now encrypted via AES256-GCM
 
 ### Fixed
-- SharedPreferences data exposure vulnerability — now uses EncryptedSharedPreferences with MasterKey
-- Debug keystore signing — separated debug/release signing configs (production ready)
-- Theme compatibility crash on resume — confirmed AppCompat theme requirement
+- SharedPreferences data exposure vulnerability: now uses EncryptedSharedPreferences with MasterKey
+- Debug keystore signing: separated debug/release signing configs (production ready)
+- Theme compatibility crash on resume: confirmed AppCompat theme requirement
 
 ### Changed
-- Released keystore configuration — requires environment variables (RELEASE_KEYSTORE_*) or manual setup
+- Released keystore configuration: requires environment variables (RELEASE_KEYSTORE_*) or manual setup
 - v0.2 pre-release gate: Icon library bloat documented, release signing configured
 
 ### Performance
@@ -126,7 +148,7 @@
 
 ---
 
-## v0.1.0 — 2026-05-03
+## v0.1.0 (2026-05-03)
 
 ### Added
 - Core IME service with InputMethodService integration
@@ -155,9 +177,9 @@
 - MIT License
 - 3500-word English dictionary (curated frequency list)
 - Comprehensive documentation: SETUP.md, CONTRIBUTING.md, GUIDE.md, ROADMAP.md
-- Per-repo CLAUDE.md with architecture + gotchas
+- Per-repository working notes covering architecture and gotchas
 
-## Roadmap archive — 2026-08-10 — ROADMAP.md
+## Roadmap archive (2026-08-10, ROADMAP.md)
 
 <details>
 <summary>Original roadmap snapshot</summary>
@@ -215,63 +237,63 @@ Current release line: v0.3.4. Last consolidated: 2026-06-28.
 - Steno-style shorthand.
 - Web dashboard.
 - Password-manager integration.
-- Biometric unlock for sensitive snippets.
+- Biometric access for sensitive snippets.
 - Hardware keyboard routing.
 
 ## Research-Driven Additions
 
 Existing-item notes: v0.4 language detection should stay offline and respect sensitive-field mode; v0.4 emoji expansion should use Unicode/CLDR annotations; v0.5 sync and plugin work should not expose placeholder crypto or runtime extension points until contract tests exist.
 
-- [ ] P0 - Sensitive-field privacy mode
+- [ ] P0: Sensitive-field privacy mode
   Why: Password, private, and no-suggestions fields must not feed learning, prediction, clipboard capture, analytics, or visible suggestion UI.
   Evidence: Android `EditorInfo` and `InputType` docs; `app/src/main/java/com/openswift/keyboard/OpenSwiftIME.kt`; `app/src/main/java/com/openswift/keyboard/data/Settings.kt`.
   Touches: `OpenSwiftIME`, `Settings`, `ClipboardHistory`, `UserDictionary`, `UsageAnalytics`, IME tests.
   Acceptance: Password/private/no-suggestions fields force incognito behavior, clear current word, hide suggestions, skip clipboard capture and learning, and have unit tests for representative `inputType` combinations.
   Complexity: M
 
-- [ ] P0 - Typed-data encryption and backup exclusions
+- [ ] P0: Typed-data encryption and backup exclusions
   Why: Clipboard history, snippets, user dictionary, analytics, per-app settings, and custom themes are typed or preference data that should not be restored or copied accidentally from plaintext stores.
   Evidence: `android:allowBackup="true"` in `app/src/main/AndroidManifest.xml`; plaintext stores in `ClipboardHistory`, `SnippetManager`, `UserDictionary`, `UsageAnalytics`, `PerAppSettings`, and `ThemeEditor`.
   Touches: Manifest backup rules, secure storage migration, privacy reset/export paths, settings UI.
   Acceptance: Sensitive stores are encrypted or explicitly excluded from Auto Backup/data extraction, migration preserves existing local data, reset/delete clears all stores, and tests cover migration plus backup-rule presence.
   Complexity: L
 
-- [ ] P0 - Clipboard capture gating
+- [ ] P0: Clipboard capture gating
   Why: Clipboard capture currently runs when the input view starts, but the settings surface promises clipboard control and Android supports marking copied content sensitive.
   Evidence: Android sensitive clipboard guidance; `app/src/main/java/com/openswift/keyboard/OpenSwiftIME.kt`; `app/src/main/java/com/openswift/keyboard/clipboard/ClipboardHistory.kt`.
   Touches: `OpenSwiftIME`, `ClipboardHistory`, settings toggles, clipboard UI.
   Acceptance: Clipboard history is off unless enabled, skips sensitive/private fields, ignores duplicate/empty values, enforces retention, and exposes a reachable clipboard panel with delete-all behavior.
   Complexity: M
 
-- [ ] P1 - Snippet CRUD and expansion parity
+- [ ] P1: Snippet CRUD and expansion parity
   Why: The README advertises snippets, but the settings create action is incomplete and IME expansion only checks single digit keys.
   Evidence: `app/src/main/java/com/openswift/keyboard/ui/SettingsActivity.kt`; `app/src/main/java/com/openswift/keyboard/snippets/SnippetManager.kt`; `app/src/main/java/com/openswift/keyboard/OpenSwiftIME.kt`.
   Touches: Snippet settings UI, snippet storage, IME text buffer, tests.
   Acceptance: Users can create/edit/delete snippets, expansion works for documented triggers, expansion respects sensitive-field privacy, and tests cover trigger matching plus persistence.
   Complexity: M
 
-- [ ] P1 - IME engine regression suite
+- [ ] P1: IME engine regression suite
   Why: Current tracked tests only cover language metadata, leaving prediction, glide decoding, privacy, and settings behavior unprotected.
   Evidence: `app/src/test/java/com/openswift/keyboard/data/KeyboardLanguagesTest.kt`; `Predictor`; `GlideDecoder`; `MultilingualPredictor`; `UserDictionary`.
   Touches: JVM tests, fixture dictionaries, fake `EditorInfo` cases, deterministic predictor inputs.
   Acceptance: Tests cover prefix prediction, autocorrect threshold behavior, learned-word candidates, bigram boosts, glide decoding, language dictionary loading, sensitive mode, and settings persistence.
   Complexity: M
 
-- [ ] P1 - Prediction pipeline correctness
+- [ ] P1: Prediction pipeline correctness
   Why: Learned-only words are not first-class candidates, punctuation can be folded into the current word, and prefix scanning over full dictionaries will not scale with larger language packs.
   Evidence: `app/src/main/java/com/openswift/keyboard/engine/Predictor.kt`; `app/src/main/java/com/openswift/keyboard/OpenSwiftIME.kt`; `UserDictionary`.
   Touches: Candidate generation, scoring, word-boundary handling, dictionary index structures, tests.
   Acceptance: Learned words can appear without static dictionary membership, punctuation commits do not poison learning, larger dictionaries stay under the latency budget, and ranking tests pin expected outcomes.
   Complexity: L
 
-- [ ] P1 - APK and dependency budget gate
+- [ ] P1: APK and dependency budget gate
   Why: Keyboard install friction and IME startup performance are sensitive to APK size, icon bloat, and unstable dependencies.
   Evidence: `app/build.gradle.kts`; `androidx.compose.material:material-icons-extended`; `androidx.security:security-crypto:1.1.0-alpha06`; AndroidX/AGP release notes.
   Touches: Gradle dependencies, release build reporting, icon imports, dependency update notes.
   Acceptance: Release builds report APK size, dependency changes record size impact, unused extended icons are replaced with scoped vectors or core icons, and security/Compose/AGP versions are reviewed before release.
   Complexity: S
 
-- [ ] P2 - Sync and plugin contract hardening
+- [ ] P2: Sync and plugin contract hardening
   Why: Future sync and plugins are high-trust features, and placeholder encryption or runtime extension points must not become reachable by accident.
   Evidence: `app/src/main/java/com/openswift/keyboard/sync/CloudSync.kt`; `app/src/main/java/com/openswift/keyboard/plugins/PluginRegistry.kt`.
   Touches: Sync API, plugin registry, feature flags, tests, settings visibility.

@@ -23,6 +23,7 @@ object KeyCode {
     const val COMMA = -11
     const val PERIOD = -12
     const val CLIPBOARD = -13
+    const val SPACER = -100
 }
 
 /** Static keyboard layout: rows of keys. */

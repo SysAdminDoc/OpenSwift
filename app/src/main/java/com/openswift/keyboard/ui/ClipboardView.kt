@@ -7,6 +7,8 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
+import com.openswift.keyboard.R
 import com.openswift.keyboard.data.ClipboardHistory
 import com.openswift.keyboard.theme.Themes
 
@@ -32,10 +34,8 @@ class ClipboardView @JvmOverloads constructor(
         textSize = 12f * density
         color = theme.keyText.and(0x99FFFFFF.toInt())
     }
-    private val deletePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        textAlign = Paint.Align.CENTER
-        textSize = 16f * density
-        color = theme.keyAccent
+    private val deleteIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_close)?.mutate()?.apply {
+        setTint(theme.keyAccent)
     }
     private val headerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -107,7 +107,16 @@ class ClipboardView @JvmOverloads constructor(
                 actionBackgroundPaint)
 
             canvas.drawText(preview, 12f * density, y + rowHeight * 0.65f, textPaint)
-            canvas.drawText("×", w - deleteWidth / 2, y + rowHeight * 0.65f, deletePaint)
+            val iconSize = (20f * density).toInt()
+            val iconCenterX = (w - deleteWidth / 2f).toInt()
+            val iconCenterY = (y + rowHeight / 2f).toInt()
+            deleteIcon?.setBounds(
+                iconCenterX - iconSize / 2,
+                iconCenterY - iconSize / 2,
+                iconCenterX + iconSize / 2,
+                iconCenterY + iconSize / 2,
+            )
+            deleteIcon?.draw(canvas)
 
             y += rowHeight
         }

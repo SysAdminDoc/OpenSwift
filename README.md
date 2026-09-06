@@ -1,130 +1,93 @@
-# OpenSwift
+<p align="center">
+  <img src="assets/brand/openswift-app-icon.png" alt="OpenSwift app icon" width="144">
+</p>
 
-[![Version](https://img.shields.io/badge/version-0.3.5-blue)](https://github.com/SysAdminDoc/OpenSwift/releases)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Android-brightgreen)]()
+<h1 align="center">OpenSwift</h1>
 
-A modern, lightweight Android keyboard inspired by SwiftKey. Features glide typing, intelligent word prediction, theme customization, and clipboard management.
+<p align="center"><strong>A fast Android keyboard with an offline typing engine and no network permission.</strong></p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/SysAdminDoc/OpenSwift/releases"><img src="https://img.shields.io/badge/version-0.3.6-7AA2F7" alt="Version 0.3.6"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22C55E" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/platform-Android%208%2B-3DDC84" alt="Android 8 or newer">
+  <img src="https://img.shields.io/badge/network%20permission-none-19C7E8" alt="No network permission">
+</p>
 
-- **Glide Typing**: Swipe continuously across keys for fast text entry; path-aware word decoding using Damerau-Levenshtein distance
-- **Animated Feedback**: Ripple effect on key tap, gradient fade on glide trail (v0.2+)
-- **Suggestion Pills**: Rounded pill-shaped suggestions with preview text (v0.2+)
-- **Word Prediction**: Context-aware next-word suggestions with bigram learning; fuzzy matching + frequency weighting
-- **Multilingual Dictionaries**: English, German, French, Spanish, and Italian word lists with language-specific layout defaults
-- **Offline Language Detection**: Current/recent input can switch suggestion dictionaries without network calls
-- **Auto-Correct**: Edit-distance-based error recovery with adaptive edit budget (handles transpositions like "teh" → "the")
-- **Multi-Layout**: QWERTY, QWERTZ, AZERTY with long-press accent popups (á, à, â, ä, etc.)
-- **10 Themes**: AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, High Contrast WCAG AAA (dark-first default)
-- **Custom Packages**: Import validated, encrypted-at-rest JSON packages containing custom themes or keyboard layouts
-- **Emoji Picker**: Categorized emoji with recents, favorites, keyword search, and no network dependency
-- **Data Portability**: Export/import learned words, snippets, custom themes, and custom layouts with validated merge or confirmed replace behavior
-- **Encrypted Sync Snapshots**: Save or open passphrase-encrypted `.oswsync` documents through an Android document provider; nothing syncs automatically
-- **Clipboard Manager**: Opt-in history of 25 recent items with sensitive-clip filtering, a dedicated keyboard panel, per-item delete, and clear-all
-- **Snippets/Text Expansion**: Create, edit, and delete validated trigger→expansion pairs; type a trigger followed by space, enter, or punctuation to replace it
-- **Learning Dictionary**: Persistent per-word frequency tracking and bigram learning (local-only)
-- **Voice Input**: Speech recognition with partial result streaming (v0.2+)
-- **Number Row**: Dedicated digit row for quick number entry (v0.2+)
-- **Usage Analytics**: Local-only keystroke, word, and correction tracking (no data leaves device)
-- **Accessibility**: Full TalkBack support, key announcements, navigation support, reduced motion mode (v0.3+)
-- **Privacy Dashboard**: View clipboard history, dictionary stats, and delete all data (v0.3+)
-- **Sensitive-Field Privacy**: Password, private, and no-suggestions fields automatically disable prediction, glide decoding, learning, snippets, and clipboard capture
-- **Per-App Profiles**: Disable predictions/learning or glide and override key height for individual applications without changing global settings
-- **Haptic & Sound Feedback**: Customizable vibration (20ms default) and optional audio cues
+<p align="center"><a href="https://github.com/SysAdminDoc/OpenSwift/releases/latest"><strong>Download the latest signed APK</strong></a></p>
 
-## Architecture
+OpenSwift combines glide typing, offline prediction, five language packs, and ten themes in a keyboard you can inspect. The app does not request Android's network permission. Clipboard history is off by default, private fields disable learning automatically, and every data transfer starts with an action you choose.
 
-- `OpenSwiftIME`: Main InputMethodService; coordinates layout, prediction, and input flow
-- `KeyboardView`: Custom View rendering keys, suggestions, and glide trail detection
-- `Predictor`: Scoring engine for next-word and auto-correct suggestions
-- `GlideDecoder`: Polyline-to-word decoding using anchored key subsequence matching
-- `WordList` + `UserDictionary`: Frequency-based per-language word stores + per-user bigram learning
-- `Settings` + `ClipboardHistory`: Persistent user preferences and clipboard state
-- `DataPortability` + `EncryptedSyncSnapshot`: Bounded, validated local JSON portability with optional authenticated encrypted documents
-- `Themes` + `Layouts`: 10 built-in themes and 3 keyboard layouts with language defaults
-- `EncryptedSyncCodec` + `PluginRegistry`: Feature-gated, contract-tested boundaries for authenticated sync envelopes and in-process extensions
+<p align="center">
+  <img src="assets/screenshots/home.png" alt="OpenSwift home screen" width="205">
+  <img src="assets/screenshots/keyboard.png" alt="OpenSwift keyboard with offline suggestions" width="205">
+  <img src="assets/screenshots/themes.png" alt="OpenSwift theme selector" width="205">
+  <img src="assets/screenshots/privacy.png" alt="OpenSwift privacy dashboard" width="205">
+</p>
 
-## Building
+## Why OpenSwift
 
-```bash
-./gradlew assembleRelease
-```
+- **Type naturally.** Glide across keys, tap normally, use auto-correct, or add a number row.
+- **Keep the engine local.** Word prediction, language detection, snippets, and learning run on your device.
+- **Make it yours.** Choose among ten themes, three layouts, custom packages, and per-app profiles.
+- **Control the data.** Review stored items, reset individual stores, export a readable backup, or create a passphrase-protected snapshot.
 
-Without release-signing environment variables, the build produces
-`app/build/outputs/apk/release/app-release-unsigned.apk`. When all four
-`RELEASE_KEYSTORE_PATH`, `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, and
-`RELEASE_KEY_PASSWORD` values are present, it produces the signed
-`app-release.apk` instead.
+## Install
 
-Run local checks:
+1. Download `OpenSwift-v0.3.6-release.apk` from [Releases](https://github.com/SysAdminDoc/OpenSwift/releases/latest).
+2. Allow installs from the browser or file manager you used to download it.
+3. Open OpenSwift and tap **Enable in Android settings**.
+4. Enable OpenSwift, then choose it as your default on-screen keyboard.
+5. Open any text field and start typing.
 
-```bash
-./gradlew testDebugUnitTest lintDebug assembleDebug checkReleaseApkSize
-```
+The public APK is signed with a stable release certificate. If you still have v0.3.0, uninstall it once before installing a current build because that early release used a different certificate.
 
-`checkReleaseApkSize` builds the minified release, writes
-`app/build/reports/apk-size/release.txt`, and fails if the compressed APK exceeds
-15 MiB.
+## What you get
 
-### Dependency and size review
+| Area | Included |
+|---|---|
+| Typing | Glide decoding, next-word suggestions, fuzzy auto-correct, auto-capitalization, a number row, accent popups, haptics, and optional sound |
+| Languages | English, German, French, Spanish, and Italian dictionaries with offline language detection |
+| Layouts | QWERTY, QWERTZ, AZERTY, plus validated custom layout packages |
+| Personalization | AMOLED Black, Catppuccin Mocha, GitHub Dark, Swift Dark, Material Light, Pixel, Nord, Dracula, Tokyo Night, and High Contrast themes |
+| Productivity | Emoji search, favorites, snippets, opt-in clipboard history, and per-app typing profiles |
+| Accessibility | TalkBack announcements, keyboard navigation, reduced motion, adjustable key height, and a high-contrast theme |
+| Portability | Validated JSON backup and passphrase-encrypted `.oswsync` documents opened through Android's document picker |
 
-The August 2026 release review replaced the all-icons Compose artifact with the
-scoped core icon set and moved AndroidX Security Crypto from `1.1.0-alpha06` to
-the stable `1.1.0` release. A clean debug APK dropped from 18,916,086 to
-11,429,700 bytes (39.6%); the R8-minified release remained effectively flat at
-1,820,678 bytes (1.74 MiB, up 62 bytes across both dependency changes).
+## Privacy model
 
-The Compose BOM remains pinned at `2024.10.01` and AGP at `8.7.2` with Gradle
-`8.10.2`. They were reviewed against the current
-[Compose](https://developer.android.com/jetpack/androidx/releases/compose) and
-[AGP](https://developer.android.com/build/releases/gradle-plugin) release notes;
-an AGP 9/Kotlin toolchain migration is intentionally kept separate from this
-release-size guardrail.
+OpenSwift's manifest contains no `INTERNET` permission. It has no account system, telemetry SDK, ad SDK, crash reporter, or background sync job.
 
-## Installation
+Locally stored settings and typed data use encrypted preferences. Android cloud backup and device-transfer extraction are disabled. Password fields and apps that request private or no-suggestion input automatically turn off visible suggestions, learning, glide decoding, snippets, analytics, and clipboard capture.
 
-1. Download the APK from [Releases](https://github.com/SysAdminDoc/OpenSwift/releases)
-2. Enable installation from unknown sources (Settings > Security)
-3. Install the APK
-4. Go to **Settings > Languages & input > On-screen keyboard > Manage on-screen keyboards**
-5. Enable **OpenSwift**
-6. Set **OpenSwift** as default input method
-7. Open any text field and start typing!
+Clipboard history is optional. When enabled, it keeps up to 25 unique items, rejects empty or Android-marked sensitive clips, and can be cleared from the keyboard or privacy dashboard.
 
-If you installed v0.3.0, uninstall it before installing v0.3.5. The older APK
-used a debug certificate, while current public releases use a stable release
-certificate.
+## Languages and default layouts
 
-## Documentation
+| Language | Default layout |
+|---|---|
+| English | QWERTY |
+| German | QWERTZ |
+| French | AZERTY |
+| Spanish | QWERTY |
+| Italian | QWERTY |
 
-Public setup, usage, architecture, and contribution notes are consolidated in this README. Local planning notes are kept in ignored working-tree files so the GitHub README remains the canonical public document.
+You can choose a language manually or let the local detector score the current word and recent context. Nothing is uploaded for detection.
 
-## Settings
+## Data portability
 
-- **Language**: English, German, French, Spanish, or Italian with matching default keyboard layout
-- **Detect Language**: Local context scoring can switch prediction language automatically
-- **Theme**: 10 built-in themes + custom theme editor
-- **Keyboard Layout**: QWERTY, QWERTZ, AZERTY
-- **Glide Typing**: Enable/disable swipe-to-type
-- **Auto-Correct**: Toggle fuzzy correction
-- **Auto-Capitalize**: Auto-capitalize after punctuation
-- **Haptic Feedback**: Vibration on keypress (20ms default)
-- **Sound Feedback**: Optional audio cues
-- **Key Height**: Adjust keyboard size (48-72 dp)
-- **Clipboard History**: Opt in to encrypted clipboard capture; Android-marked sensitive clips and private fields are always skipped
-- **Snippets**: Manage case-insensitive triggers and multiline replacements; expansion is always disabled in private fields
-- **Per-App Profiles**: Tap the keyboard settings key inside an app to prefill its package name, then save prediction, glide, or key-height overrides; reset one profile or all profiles at any time
-- **Customization Packages**: Import a versioned JSON theme/layout package; invalid files report the exact field or keyboard action that needs correction
-- **Data Portability**: Export a readable JSON backup, merge imported data, or confirm replacement of local learned words/snippets/custom themes/custom layouts; complete validation happens before data changes
-- **Encrypted Sync Snapshots**: Export with a confirmed 12+ character passphrase, then merge or replace from a `.oswsync` document; OpenSwift never stores the passphrase
-- **Incognito Mode**: Disable prediction history, learning, snippets, and clipboard capture for every field
+OpenSwift offers two deliberately different export formats:
 
-## Customization Package Format
+- A readable JSON backup can include learned dictionaries, snippets, custom themes, and custom layouts. Use this when editability matters.
+- An `.oswsync` snapshot encrypts learned dictionaries, snippets, and themes with AES-256-GCM and a passphrase you provide. OpenSwift never stores the passphrase.
 
-OpenSwift accepts UTF-8 JSON files up to 512 KiB from **Settings → Advanced →
-Customization Packages**. Version 1 packages use the following envelope; each
-file can contain up to 10 themes and 10 layouts, and must contain at least one:
+Imports are validated before data changes. Merge keeps existing records where possible. Replace requires confirmation and rolls back failed preference groups.
+
+## Customization packages
+
+OpenSwift accepts UTF-8 JSON packages up to 512 KiB from **Settings > Advanced > Customization Packages**. A package can contain up to ten themes and ten layouts.
+
+<details>
+<summary>Minimal theme package</summary>
 
 ```json
 {
@@ -150,131 +113,48 @@ file can contain up to 10 themes and 10 layouts, and must contain at least one:
 }
 ```
 
-Theme IDs must start with `custom_`; colors accept `#RRGGBB` or `#AARRGGBB`.
-Layout IDs must start with `custom_layout_`. A layout contains `name` and
-`rows`, where every key has a `label`, optional `width` (0.25-5), optional
-single-character `popup` array, and either the default `character` action or
-one of: `shift`, `delete`, `enter`, `space`, `symbols`, `clipboard`, `comma`,
-`period`, `emoji`, `settings`, or `spacer`. Layouts allow 3-6 rows, 2-16 keys
-per row, and 64 keys total; character labels must be unique, and exactly one
-Shift, Delete, Enter, Space, and Symbols action is required. Raw numeric key
-codes and unsupported actions are rejected.
+Theme IDs start with `custom_`. Layout IDs start with `custom_layout_`. A layout has three to six rows, two to sixteen keys per row, and no more than 64 keys. Validation reports the field that needs attention instead of partially importing a broken package.
 
-## Emoji Picker
+</details>
 
-- **Categories**: Recent, favorites, smileys, hands, hearts, food, nature, travel, objects, and symbols
-- **Recents**: Selected emoji are stored locally for fast reuse
-- **Favorites**: Long-press an emoji to toggle it as a favorite
-- **Search**: Tap the search field and use the in-picker letters to filter by local keywords
+## Build and verify
 
-## How It Works
+Use JDK 17 with the checked-in Gradle wrapper:
 
-### Glide Typing
-1. User swipes across keys; samples collected at each keypress
-2. Anchor keys identified at gesture turning points
-3. Dictionary words scored by:
-   - Starting key match (required)
-   - Ending key match (required)
-   - Subsequence coverage (all anchors present in order)
-   - Word frequency + user history bonus
-4. Top result committed
+```bash
+./gradlew testDebugUnitTest lintDebug assembleDebug checkReleaseApkSize
+```
 
-### Word Prediction
-For the current incomplete word:
-- Prefix match wins (if word starts with typed prefix)
-- Fuzzy match (Damerau-Levenshtein ≤ edit budget)
-- Bundled words use an indexed prefix range and length buckets instead of a full-list scan
-- Learned-only words are first-class candidates alongside bundled words
-- Frequency weighting: log10(frequency + user-count + 1)
-- Bigram boost scales with the locally learned previous-word count
+Build a release APK:
 
-### Multilingual Input
-Manual language selection switches the active offline dictionary and learned-word store:
-- English uses QWERTY by default
-- German uses QWERTZ by default
-- French uses AZERTY by default
-- Spanish uses QWERTY by default
-- Italian uses QWERTY by default
+```bash
+./gradlew assembleRelease
+```
 
-When language detection is enabled, OpenSwift scores the current word and recent local context against bundled dictionaries and accent hints. No typed text is sent off-device.
+Without signing variables, the release task produces `app-release-unsigned.apk`. A signed build requires `RELEASE_KEYSTORE_PATH`, `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, and `RELEASE_KEY_PASSWORD` in the environment. The size gate fails if the compressed release exceeds 15 MiB.
 
-### Auto-Correct
-Applied at space, enter, and punctuation boundaries when enabled:
-- If word length ≥ 3 and not in dictionary, find closest match
-- Conservative bounded edit distance; uncertain matches preserve the typed word
-- Learns user's correction pattern
+## Project map
 
-## Performance
+- `OpenSwiftIME` owns editor privacy state, input flow, suggestions, and keyboard panels.
+- `KeyboardView` draws keys, suggestions, feedback, and glide trails.
+- `Predictor`, `GlideDecoder`, `WordList`, and `UserDictionary` form the offline language engine.
+- `Settings`, `ClipboardHistory`, `DataPortability`, and `EncryptedSyncSnapshot` handle local preferences and user-directed transfers.
+- `Themes`, `Layouts`, and the customization parser define the built-in and imported appearance system.
 
-- **Dictionary**: 3500+ common English words in raw resource
-- **Prediction**: O(log n + k) indexed prefix lookup; fuzzy work is restricted to nearby word lengths
-- **Glide decoding**: O(m·n) (m anchors, n dictionary words)
-- **Memory**: ~8 MB (word list + user dictionary)
+Experimental transport and plugin entry points remain disabled in published builds. The plugin contract does not load external APKs or expose Android context, files, or network access.
 
-## Tech Stack
+## Current limits
 
-- **Language**: Kotlin
-- **UI**: Custom View (KeyboardView) + Jetpack Compose (Settings)
-- **Persistence**: AES-256 encrypted SharedPreferences with typed-data migration and backup exclusion
-- **Dictionary**: 3500-word frequency-weighted English word list
-- **Targeting**: minSdk 26 (Android 8), targetSdk 35
-- **Build System**: Gradle 8+, ProGuard minification (R8)
-
-## Privacy & Security
-
-- **Zero cloud dependency**: No network requests, no account required
-- **Encrypted at rest**: Clipboard history, snippets, learned words, local usage data, per-app profiles, emoji history, settings, custom themes, and custom layouts use AES-256 encrypted preferences
-- **No device backup**: Android cloud backup and device-transfer extraction are disabled for OpenSwift data
-- **Open source**: MIT licensed; code is auditable
-- **No telemetry**: No analytics, no crash reporting, no ads
-- **Automatic incognito fields**: Password and app-declared private/no-suggestions editors never expose suggestions or feed local learning and clipboard history
-- **Device learns**: User bigrams and word frequencies stay on-device
-- **Clipboard history**: Off by default, bounded to 25 unique non-empty items, and cleared on uninstall
-
-### Sync and extension boundaries
-
-Encrypted Sync Snapshots run only after a user chooses Export, Merge, or
-Replace and selects a destination through Android's document picker. OpenSwift
-has no network permission, account, background-sync job, or stored passphrase.
-Snapshots contain only learned dictionaries, snippets, and custom themes in a
-versioned AES-256-GCM envelope with a PBKDF2-HMAC-SHA256 passphrase key.
-Per-app metadata and analytics are not part of the contract.
-
-Ordinary JSON portability additionally includes custom layouts for complete
-customization backup. JSON files are readable plaintext by design; use an
-encrypted `.oswsync` snapshot when the copy needs passphrase protection.
-
-The future transport client and runtime plugin registry remain compile-time
-disabled in published builds through `ENABLE_EXPERIMENTAL_SYNC` and
-`ENABLE_EXPERIMENTAL_PLUGINS`. Any future sync transport can receive only
-authenticated ciphertext, never plaintext or key material.
-
-Plugin API v1 supports prediction, theme, and layout capabilities for explicitly
-registered in-process extensions. It deliberately provides no APK loading,
-reflection discovery, Android `Context`, filesystem, or network capability.
-Metadata, namespaces, text lengths, suggestion counts, and keyboard geometry
-are bounded; a plugin that throws or violates its contract is unloaded and
-quarantined without taking down healthy plugins.
-
-## Roadmap
-
-**v0.4 (Next)**: Dictionary portability, per-app prediction profiles, custom package import
-
-**v0.5**: Optional encrypted sync, plugin framework hardening, optional on-device ML prediction
-
-**v1.0**: Stable release, expanded language support, performance audit, extension API stability
+- The bundled dictionaries favor common daily language. They are intentionally smaller than the language models in large commercial keyboards.
+- OpenSwift is distributed as a sideloaded APK. It is not currently published in an app store.
+- Encrypted snapshots are user-created documents, not automatic cloud synchronization.
+- The internal speech-recognition adapter is not connected to a keyboard key in the published build.
+- Handwriting, steno input, and optional on-device neural models are not included yet.
 
 ## Contributing
 
-OpenSwift is open to community contributions. Start with the build and architecture sections above, keep changes local-first and privacy-preserving, and verify with Gradle before submitting patches.
-
-**Ideas for contributions:**
-- New keyboard layouts (Dvorak, Colemak, Bépo, etc.)
-- Language packs (German, French, Spanish, and Italian word lists)
-- Additional themes
-- Accessibility improvements
-- Performance optimizations
+Contributions are welcome. Good starting points include additional language packs, layouts, accessibility work, and measured prediction improvements. Keep core typing local, add tests for behavior changes, and run the full Gradle verification command before opening a pull request.
 
 ## License
 
-MIT: see [LICENSE](LICENSE)
+OpenSwift is available under the [MIT License](LICENSE).

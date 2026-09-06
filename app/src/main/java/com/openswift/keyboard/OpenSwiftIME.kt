@@ -113,6 +113,10 @@ class OpenSwiftIME : InputMethodService() {
             emojiMode = false
             showKeyboardView()
         }
+        emojiView.onClose = {
+            emojiMode = false
+            showKeyboardView()
+        }
         emojiInputView = withNavigationBarInset(emojiView, Themes.Amoled.background)
 
         clipboardView = com.openswift.keyboard.ui.ClipboardView(this)

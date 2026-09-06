@@ -3,16 +3,20 @@ package com.openswift.keyboard.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.openswift.keyboard.data.ClipboardHistory
 import com.openswift.keyboard.data.TypedDataStores
 import com.openswift.keyboard.engine.UserDictionary
@@ -47,7 +51,7 @@ fun PrivacyUI(
         )
         
         Text(
-            "Manage your data with full transparency. All data stays on your device.",
+            "See what OpenSwift stores, reset it, or remove it. Everything here stays on your device.",
             style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f),
             modifier = Modifier.padding(bottom = Spacing.lg)
@@ -55,7 +59,7 @@ fun PrivacyUI(
 
         // Clipboard History Section
         PrivacyDataCard(
-            icon = "📋",
+            icon = Icons.AutoMirrored.Filled.List,
             title = "Clipboard History",
             subtitle = "${clipboardItems.size} items saved",
             bgColor = bgColor,
@@ -64,7 +68,7 @@ fun PrivacyUI(
         ) {
             if (clipboardItems.isEmpty()) {
                 Text(
-                    "No clipboard items yet. When you copy text, it will appear here.",
+                    "No clipboard items yet. When clipboard history is enabled, copied text will appear here.",
                     style = AppTypography.bodySmall,
                     color = textColor.copy(alpha = 0.6f),
                     modifier = Modifier.padding(Spacing.md)
@@ -107,7 +111,7 @@ fun PrivacyUI(
 
         // Dictionary Stats Section
         PrivacyDataCard(
-            icon = "📚",
+            icon = Icons.Filled.Edit,
             title = "Learning & Dictionary",
             subtitle = "$wordCount words learned",
             bgColor = bgColor,
@@ -121,7 +125,7 @@ fun PrivacyUI(
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
                 StatsRow("Words Learned", wordCount.toString(), textColor)
-                Divider(
+                HorizontalDivider(
                     color = textColor.copy(alpha = Alphas.divider),
                     modifier = Modifier.padding(vertical = Spacing.sm)
                 )
@@ -167,11 +171,21 @@ fun PrivacyUI(
                     .padding(Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
-                Text(
-                    "⚠️ Delete All Data",
-                    style = AppTypography.headlineSmall,
-                    color = Color(0xFFC62828)
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = Color(0xFFC62828),
+                    )
+                    Text(
+                        "Delete all data",
+                        style = AppTypography.headlineSmall,
+                        color = Color(0xFFC62828),
+                    )
+                }
                 
                 Text(
                     "Permanently delete clipboard history, learned words, snippets, custom themes and layouts, emoji history, per-app profiles, and local usage data. This action cannot be undone.",
@@ -195,15 +209,27 @@ fun PrivacyUI(
         Spacer(modifier = Modifier.height(Spacing.xl))
 
         // Privacy Policy Info
-        Text(
-            "🔒 All data is stored locally on your device. No data is sent to external servers.",
-            style = AppTypography.labelSmall,
-            color = textColor.copy(alpha = 0.6f),
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(accentColor.copy(alpha = 0.05f), Shapes.sm)
-                .padding(Spacing.md)
-        )
+                .padding(Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Lock,
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                "OpenSwift has no network permission. Your typing data stays on this device.",
+                style = AppTypography.labelSmall,
+                color = textColor.copy(alpha = 0.68f),
+                modifier = Modifier.weight(1f),
+            )
+        }
 
         Spacer(modifier = Modifier.height(Spacing.lg))
     }
@@ -248,7 +274,7 @@ fun PrivacyUI(
 
 @Composable
 fun PrivacyDataCard(
-    icon: String,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     bgColor: Color,
@@ -272,14 +298,19 @@ fun PrivacyDataCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md)
             ) {
-                Text(icon, fontSize = 28.sp)
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(26.dp),
+                )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(title, style = AppTypography.headlineSmall, color = textColor)
                     Text(subtitle, style = AppTypography.labelMedium, color = textColor.copy(alpha = 0.7f))
                 }
             }
             
-            Divider(
+            HorizontalDivider(
                 color = textColor.copy(alpha = Alphas.divider),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -366,4 +397,3 @@ fun ConfirmationDialog(
         shape = Shapes.md
     )
 }
-

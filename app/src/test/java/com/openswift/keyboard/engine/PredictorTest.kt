@@ -62,13 +62,13 @@ class PredictorTest {
 
     @Test
     fun knownUserWordIsNeverAutocorrected() {
-        val userDictionary = emptyUserDictionary().apply { learn(null, "codexx") }
+        val userDictionary = emptyUserDictionary().apply { learn(null, "atlasx") }
         val predictor = Predictor(
-            WordList.fromEntries(mapOf("codex" to 1_000)),
+            WordList.fromEntries(mapOf("atlas" to 1_000)),
             userDictionary
         )
 
-        assertEquals("codexx", predictor.autoCorrect("codexx", null))
+        assertEquals("atlasx", predictor.autoCorrect("atlasx", null))
     }
 
     private fun predictor(vararg entries: Pair<String, Int>): Predictor =

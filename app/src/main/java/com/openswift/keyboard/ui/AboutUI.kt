@@ -3,20 +3,25 @@ package com.openswift.keyboard.ui
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.openswift.keyboard.BuildConfig
+import com.openswift.keyboard.R
 
 @Composable
 fun AboutUI(
@@ -37,10 +42,13 @@ fun AboutUI(
     ) {
         Spacer(modifier = Modifier.height(Spacing.md))
         
-        Text(
-            "⌨️",
-            fontSize = 64.sp,
-            modifier = Modifier.padding(bottom = Spacing.md)
+        Image(
+            painter = painterResource(R.drawable.openswift_brand),
+            contentDescription = "OpenSwift app icon",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .size(92.dp)
+                .padding(bottom = Spacing.md),
         )
         
         Text(
@@ -50,12 +58,12 @@ fun AboutUI(
         )
         
         Text(
-            "v0.3.5",
+            "v${BuildConfig.VERSION_NAME}",
             style = AppTypography.bodyMedium,
             color = textColor.copy(alpha = 0.7f)
         )
         
-        Divider(
+        HorizontalDivider(
             color = accentColor.copy(alpha = Alphas.divider),
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,7 +92,7 @@ fun AboutUI(
                 )
                 
                 Text(
-                    "OpenSwift is a modern, fast, and customizable Android keyboard with glide typing, intelligent predictions, beautiful themes, and privacy at its core.",
+                    "OpenSwift is a private Android keyboard built for fast daily typing. Glide decoding, predictions, themes, and clipboard tools all run on your device.",
                     style = AppTypography.bodyMedium,
                     color = textColor.copy(alpha = 0.8f),
                     lineHeight = 24.sp
@@ -114,24 +122,26 @@ fun AboutUI(
                 )
                 
                 listOf(
-                    "Glide typing with smart gesture detection",
-                    "10 beautiful color themes including accessibility modes",
-                    "Animated ripple & glide trail effects",
+                    "Glide typing with offline word decoding",
                     "English, German, French, Spanish, and Italian dictionaries",
-                    "Offline language detection for suggestions",
-                    "Emoji keyboard with categories, recents, favorites, and search",
-                    "Validated export and import for typed data, themes, and layouts",
-                    "Smart predictions & auto-correct",
-                    "Privacy dashboard & clipboard management",
-                    "Reduced motion mode for accessibility",
-                    "No telemetry. 100% private."
+                    "Ten themes with high contrast and reduced motion options",
+                    "Emoji search, snippets, and opt-in clipboard history",
+                    "Per-app profiles for prediction, glide, and key height",
+                    "Validated backups plus encrypted sync snapshots",
+                    "Automatic protection for password and private fields",
+                    "No network permission, telemetry, ads, or account",
                 ).forEach { feature ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("✓", color = accentColor, style = AppTypography.labelLarge)
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(18.dp),
+                        )
                         Text(
                             feature,
                             style = AppTypography.bodySmall,
@@ -174,7 +184,7 @@ fun AboutUI(
         
         // Footer
         Text(
-            "Made with ❤️ for Android users",
+            "Open source and built for private Android typing.",
             style = AppTypography.labelMedium,
             color = textColor.copy(alpha = 0.6f),
             modifier = Modifier.padding(vertical = Spacing.xl)

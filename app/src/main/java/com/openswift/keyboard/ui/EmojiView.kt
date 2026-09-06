@@ -8,6 +8,8 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
+import com.openswift.keyboard.R
 import com.openswift.keyboard.data.SecurePreferences
 import com.openswift.keyboard.data.TypedDataStores
 import com.openswift.keyboard.theme.Themes
@@ -19,6 +21,7 @@ class EmojiView @JvmOverloads constructor(
 ) : View(ctx, attrs) {
 
     var onEmojiSelected: ((String) -> Unit)? = null
+    var onClose: (() -> Unit)? = null
 
     private val prefs = SecurePreferences.open(ctx, TypedDataStores.EMOJI_PICKER)
     private val theme = Themes.Amoled
@@ -52,9 +55,14 @@ class EmojiView @JvmOverloads constructor(
         color = theme.suggestionText
         textAlign = Paint.Align.CENTER
     }
-    private val starPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = theme.keyAccent
-        textAlign = Paint.Align.CENTER
+    private val starIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_star)?.mutate()?.apply {
+        setTint(theme.keyAccent)
+    }
+    private val closeIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_close)?.mutate()?.apply {
+        setTint(theme.keyText)
+    }
+    private val backspaceIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_backspace)?.mutate()?.apply {
+        setTint(theme.keyText)
     }
     private val emojiPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -141,8 +149,8 @@ class EmojiView @JvmOverloads constructor(
         subtleTextPaint.textSize = 14f * density
         val label = if (query.isBlank()) "Search emoji" else query
         canvas.drawText(label, field.centerX(), field.centerY() + 5f * density, subtleTextPaint)
-        canvas.drawText("Del", backspace.centerX(), backspace.centerY() + 5f * density, textPaint)
-        canvas.drawText("X", clear.centerX(), clear.centerY() + 5f * density, textPaint)
+        drawIcon(canvas, backspaceIcon, backspace, 18f)
+        drawIcon(canvas, closeIcon, clear, 18f)
     }
 
     private fun drawSearchKeyboard(canvas: Canvas, top: Float) {
@@ -170,7 +178,6 @@ class EmojiView @JvmOverloads constructor(
         val visibleBottom = height.toFloat()
         emojiPaint.textSize = 30f * density
         textPaint.textSize = 13f * density
-        starPaint.textSize = 13f * density
 
         if (results.isEmpty()) {
             canvas.drawText("No emoji", width / 2f, top + 44f * density, subtleTextPaint)
@@ -187,9 +194,28 @@ class EmojiView @JvmOverloads constructor(
             emojiBounds[entry.value] = rect
             canvas.drawText(entry.value, x + cell / 2, y + cell * 0.68f, emojiPaint)
             if (favorites.contains(entry.value)) {
-                canvas.drawText("*", x + cell - 10f * density, y + 14f * density, starPaint)
+                val starBounds = RectF(
+                    x + cell - 22f * density,
+                    y + 4f * density,
+                    x + cell - 6f * density,
+                    y + 20f * density,
+                )
+                drawIcon(canvas, starIcon, starBounds, 16f)
             }
         }
+    }
+
+    private fun drawIcon(canvas: Canvas, icon: android.graphics.drawable.Drawable?, bounds: RectF, sizeDp: Float) {
+        val size = (sizeDp * density).toInt()
+        val centerX = bounds.centerX().toInt()
+        val centerY = bounds.centerY().toInt()
+        icon?.setBounds(
+            centerX - size / 2,
+            centerY - size / 2,
+            centerX + size / 2,
+            centerY + size / 2,
+        )
+        icon?.draw(canvas)
     }
 
     private fun handleTap(x: Float, y: Float): Boolean {
@@ -214,6 +240,10 @@ class EmojiView @JvmOverloads constructor(
             return true
         }
         actionBounds["clear"]?.takeIf { it.contains(x, y) }?.let {
+            if (query.isBlank() && !searchActive) {
+                onClose?.invoke()
+                return true
+            }
             query = ""
             searchActive = false
             scrollOffset = 0f

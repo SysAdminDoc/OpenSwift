@@ -7,6 +7,8 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
+import com.openswift.keyboard.R
 import com.openswift.keyboard.data.Settings
 import com.openswift.keyboard.engine.UserDictionary
 import com.openswift.keyboard.engine.GlideDecoder
@@ -83,8 +85,9 @@ class KeyboardView(
     }
     private val pillBorderPaint = Paint().apply { 
         style = Paint.Style.STROKE
-        strokeWidth = 2f
+        strokeWidth = 1f
         color = theme.keyAccent
+        alpha = 90
     }
     private val previewPaint = Paint().apply {
         textSize = 10f
@@ -108,6 +111,14 @@ class KeyboardView(
         style = Paint.Style.STROKE
         strokeWidth = 3f
     }
+    private val clipboardIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_content_paste)
+        ?.mutate()
+        ?.apply { setTint(theme.keyText) }
+    private val shiftIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_keyboard_capslock)?.mutate()
+    private val deleteIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_backspace)?.mutate()
+    private val enterIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_keyboard_return)?.mutate()
+    private val emojiIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_sentiment_satisfied)?.mutate()
+    private val settingsIcon = AppCompatResources.getDrawable(ctx, R.drawable.ic_settings)?.mutate()
 
     private var isGliding = false
     private var glideStartTime = 0L
@@ -134,7 +145,7 @@ class KeyboardView(
         val numRows = effectiveLayout.rows.size // includes number row if enabled
         val rowSpacingPx = 2f * density
         val suggestionHeight = if (predictionEnabled) {
-            (4f * density) + (keyHeightPx * 1.2f) + (4f * density)
+            (4f * density) + (keyHeightPx * 0.82f) + (4f * density)
         } else {
             0f
         }
@@ -154,12 +165,12 @@ class KeyboardView(
         
         // Calculate key height in pixels
         val keyHeightPx = keyHeightDp * density
-        val suggestionHeightPx = keyHeightPx * 1.2f
+        val suggestionHeightPx = keyHeightPx * 0.82f
         val rowSpacingPx = 2f * density // small gap between rows
         
-        // Update paint text sizes based on key height - MUCH LARGER for readability
-        textPaint.textSize = (keyHeightPx * 0.60f) // 60% of key height - significantly larger
-        suggestionPaint.textSize = (keyHeightPx * 0.40f)
+        // Scale typography with the user's selected key height.
+        textPaint.textSize = keyHeightPx * 0.50f
+        suggestionPaint.textSize = keyHeightPx * 0.32f
         previewPaint.textSize = (keyHeightPx * 0.18f)
         
         // Draw suggestions row as pills with preview
@@ -169,39 +180,39 @@ class KeyboardView(
         if (predictionEnabled) {
             y = 4f * density // small top padding
             canvas.drawRect(0f, 0f, w, y + suggestionHeightPx, suggestionBgPaint)
-            var x = 12f * density // responsive padding
+            val outerPadding = 10f * density
+            val pillGap = 8f * density
+            val pillWidth = (w - (outerPadding * 2f) - (pillGap * 2f)) / 3f
 
-            for (sugg in suggestions.take(3)) {
-                val suggWidth = suggestionPaint.measureText(sugg) + (16f * density)
+            suggestions.take(3).forEachIndexed { index, sugg ->
+                val x = outerPadding + (index * (pillWidth + pillGap))
                 val pillHeight = suggestionHeightPx - (8f * density)
-                val pillRadius = pillHeight / 2f
+                val pillRadius = minOf(12f * density, pillHeight / 2f)
                 val pillY = y + (4f * density)
 
-                // Prevent overflow: stop adding suggestions if they'd go off-screen
-                if (x + suggWidth > w) break
-
-                val rect = Rect(x.toInt(), pillY.toInt(), (x + suggWidth).toInt(), (pillY + suggestionHeightPx).toInt())
+                val rect = Rect(
+                    x.toInt(),
+                    pillY.toInt(),
+                    (x + pillWidth).toInt(),
+                    (pillY + pillHeight).toInt(),
+                )
                 suggestionBounds[sugg] = rect
 
-                // Draw pill background (rounded rectangle)
                 canvas.drawRoundRect(
-                    x, pillY, x + suggWidth, pillY + pillHeight,
+                    x, pillY, x + pillWidth, pillY + pillHeight,
                     pillRadius, pillRadius,
                     pillPaint
                 )
 
-                // Draw pill border
                 canvas.drawRoundRect(
-                    x, pillY, x + suggWidth, pillY + pillHeight,
+                    x, pillY, x + pillWidth, pillY + pillHeight,
                     pillRadius, pillRadius,
                     pillBorderPaint
                 )
 
-                // Draw main suggestion text (centered vertically in pill)
-                val textY = pillY + (pillHeight / 2) + (4f * density)
-                canvas.drawText(sugg, x + suggWidth / 2, textY, suggestionPaint)
-
-                x += suggWidth + (8f * density)
+                val textY = pillY + (pillHeight / 2f) -
+                    ((suggestionPaint.ascent() + suggestionPaint.descent()) / 2f)
+                canvas.drawText(sugg, x + pillWidth / 2f, textY, suggestionPaint)
             }
 
             y += suggestionHeightPx + (4f * density)
@@ -209,12 +220,17 @@ class KeyboardView(
 
         // Draw keyboard rows
         keyBounds.clear()
-        val keyPadding = 1.5f * density
+        val keyPadding = 2f * density
+        val keyCornerRadius = 6f * density
         for (row in effectiveLayout.rows) {
             val totalWeight = row.sumOf { it.widthWeight.toDouble() }
             var x2 = 0f
             for (key in row) {
                 val kw = (w.toDouble() / totalWeight) * key.widthWeight.toDouble()
+                if (key.code == KC.SPACER) {
+                    x2 += kw.toFloat()
+                    continue
+                }
                 // Store bounds with padding applied (actual tappable area)
                 val rect = Rect(
                     (x2 + keyPadding).toInt(), 
@@ -228,23 +244,24 @@ class KeyboardView(
                 val bgPaint = if (key.isModifier) keyModifierBgPaint else keyBgPaint
                 bgPaint.color = bgColor
                 
-                // Draw key background with slight padding for spacing
-                canvas.drawRect(
+                canvas.drawRoundRect(
                     x2 + keyPadding, y + keyPadding, x2 + kw.toFloat() - keyPadding, y + keyHeightPx - keyPadding,
+                    keyCornerRadius, keyCornerRadius,
                     bgPaint
                 )
                 
-                // Draw key outline (subtle border)
                 keyOutline.color = theme.keyAccent
-                keyOutline.alpha = (0.2f * 255).toInt()
-                canvas.drawRect(
+                keyOutline.alpha = (0.14f * 255).toInt()
+                canvas.drawRoundRect(
                     x2 + keyPadding, y + keyPadding, x2 + kw.toFloat() - keyPadding, y + keyHeightPx - keyPadding,
+                    keyCornerRadius, keyCornerRadius,
                     keyOutline
                 )
                 
                 if (shiftActive && key.code == KC.SHIFT) {
-                    canvas.drawRect(
+                    canvas.drawRoundRect(
                         x2 + 2, y + 2, x2 + kw.toFloat() - 2, y + keyHeightPx - 2,
+                        keyCornerRadius, keyCornerRadius,
                         shiftHighlightPaint
                     )
                 }
@@ -266,7 +283,30 @@ class KeyboardView(
                 if (labelWidth > availableTextWidth) {
                     textPaint.textSize = defaultTextSize * (availableTextWidth / labelWidth)
                 }
-                canvas.drawText(displayLabel, textX, textY, textPaint)
+                val keyIcon = when (key.code) {
+                    KC.CLIPBOARD -> clipboardIcon
+                    KC.SHIFT -> shiftIcon
+                    KC.DELETE -> deleteIcon
+                    KC.ENTER -> enterIcon
+                    KC.EMOJI -> emojiIcon
+                    KC.SETTINGS -> settingsIcon
+                    else -> null
+                }
+                if (keyIcon != null) {
+                    val iconSize = (keyHeightPx * 0.42f).toInt()
+                    val iconLeft = (textX - (iconSize / 2f)).toInt()
+                    val iconTop = (y + ((keyHeightPx - iconSize) / 2f)).toInt()
+                    keyIcon.setTint(if (shiftActive && key.code == KC.SHIFT) theme.keyAccent else theme.keyText)
+                    keyIcon.setBounds(
+                        iconLeft,
+                        iconTop,
+                        iconLeft + iconSize,
+                        iconTop + iconSize,
+                    )
+                    keyIcon.draw(canvas)
+                } else {
+                    canvas.drawText(displayLabel, textX, textY, textPaint)
+                }
                 textPaint.textSize = defaultTextSize
                 x2 += kw.toFloat()
             }

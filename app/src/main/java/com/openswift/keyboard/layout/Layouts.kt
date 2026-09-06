@@ -28,14 +28,14 @@ object Layouts {
         listOf(
             "qwertyuiop".map { letter(it, popups[it] ?: emptyList()) },
             buildList {
-                add(Key("", -100, widthWeight = 0.5f))
+                add(Key("", KC.SPACER, widthWeight = 0.5f))
                 addAll("asdfghjkl".map { letter(it, popups[it] ?: emptyList()) })
-                add(Key("", -100, widthWeight = 0.5f))
+                add(Key("", KC.SPACER, widthWeight = 0.5f))
             },
             buildList {
-                add(Key("⇧", KC.SHIFT, widthWeight = 1.5f, isModifier = true))
+                add(Key("Shift", KC.SHIFT, widthWeight = 1.5f, isModifier = true))
                 addAll("zxcvbnm".map { letter(it, popups[it] ?: emptyList()) })
-                add(Key("⌫", KC.DELETE, widthWeight = 1.5f, isModifier = true))
+                add(Key("Delete", KC.DELETE, widthWeight = 1.5f, isModifier = true))
             },
             bottomRow()
         )
@@ -46,14 +46,14 @@ object Layouts {
         listOf(
             "qwertzuiop".map { letter(it, popups[it] ?: emptyList()) },
             buildList {
-                add(Key("", -100, widthWeight = 0.5f))
+                add(Key("", KC.SPACER, widthWeight = 0.5f))
                 addAll("asdfghjkl".map { letter(it, popups[it] ?: emptyList()) })
-                add(Key("", -100, widthWeight = 0.5f))
+                add(Key("", KC.SPACER, widthWeight = 0.5f))
             },
             buildList {
-                add(Key("⇧", KC.SHIFT, widthWeight = 1.5f, isModifier = true))
+                add(Key("Shift", KC.SHIFT, widthWeight = 1.5f, isModifier = true))
                 addAll("yxcvbnm".map { letter(it, popups[it] ?: emptyList()) })
-                add(Key("⌫", KC.DELETE, widthWeight = 1.5f, isModifier = true))
+                add(Key("Delete", KC.DELETE, widthWeight = 1.5f, isModifier = true))
             },
             bottomRow()
         )
@@ -65,9 +65,9 @@ object Layouts {
             "azertyuiop".map { letter(it, popups[it] ?: emptyList()) },
             "qsdfghjklm".map { letter(it, popups[it] ?: emptyList()) },
             buildList {
-                add(Key("⇧", KC.SHIFT, widthWeight = 1.5f, isModifier = true))
+                add(Key("Shift", KC.SHIFT, widthWeight = 1.5f, isModifier = true))
                 addAll("wxcvbn".map { letter(it, popups[it] ?: emptyList()) })
-                add(Key("⌫", KC.DELETE, widthWeight = 1.5f, isModifier = true))
+                add(Key("Delete", KC.DELETE, widthWeight = 1.5f, isModifier = true))
             },
             bottomRow()
         )
@@ -81,7 +81,7 @@ object Layouts {
             buildList {
                 add(Key("=\\<", KC.SHIFT_SYMBOLS, widthWeight = 1.5f, isModifier = true))
                 "*\"':;!?".forEach { add(letter(it)) }
-                add(Key("⌫", KC.DELETE, widthWeight = 1.5f, isModifier = true))
+                add(Key("Delete", KC.DELETE, widthWeight = 1.5f, isModifier = true))
             },
             bottomRow(symbols = true)
         )
@@ -95,19 +95,21 @@ object Layouts {
             buildList {
                 add(Key("?123", KC.SHIFT_SYMBOLS, widthWeight = 1.5f, isModifier = true))
                 "%©®™✓[]".forEach { add(letter(it)) }
-                add(Key("⌫", KC.DELETE, widthWeight = 1.5f, isModifier = true))
+                add(Key("Delete", KC.DELETE, widthWeight = 1.5f, isModifier = true))
             },
             bottomRow(symbols = true)
         )
     )
 
     private fun bottomRow(symbols: Boolean = false): List<Key> = listOf(
-        Key(if (symbols) "ABC" else "?123", if (symbols) KC.ABC else KC.SYMBOLS, widthWeight = 1.5f, isModifier = true),
-        Key("📋", KC.CLIPBOARD, widthWeight = 1.1f, isModifier = true),
-        Key(",", KC.COMMA, popup = listOf("!", "?", ";", ":")),
+        Key(if (symbols) "ABC" else "?123", if (symbols) KC.ABC else KC.SYMBOLS, widthWeight = 1.4f, isModifier = true),
+        Key("Emoji", KC.EMOJI, isModifier = true),
+        Key("Clipboard", KC.CLIPBOARD, isModifier = true),
+        Key(",", KC.COMMA, widthWeight = 0.8f, popup = listOf("!", "?", ";", ":")),
         Key("space", KC.SPACE, widthWeight = 4f),
-        Key(".", KC.PERIOD, popup = listOf("…", "!", "?")),
-        Key("⏎", KC.ENTER, widthWeight = 1.5f, isModifier = true)
+        Key(".", KC.PERIOD, widthWeight = 0.8f, popup = listOf("…", "!", "?")),
+        Key("Settings", KC.SETTINGS, isModifier = true),
+        Key("Enter", KC.ENTER, widthWeight = 1.4f, isModifier = true)
     )
 
     fun byId(id: String): KeyLayout = when (id) {
